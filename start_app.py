@@ -1,9 +1,9 @@
 from tkinter import *
-import main_window
+import windows
 
 root = Tk()
 
-main_window.MainWindow(root)
 
+windows.MainWindow(root, windows.MainWindow)
 
 root.mainloop()

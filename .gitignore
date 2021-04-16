@@ -6,3 +6,5 @@
 .idea/
 /db/*.sqlite3
 __pycache__/
+*test*.py
+/db/*test*.sql
