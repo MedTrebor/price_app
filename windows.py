@@ -9,14 +9,21 @@ class Window:
     def __init__(self, window, previous_window):
         self.window = window
         self.previous_window = previous_window
-        self.main_row_count = 0
+        self.main_row_count = -1
         for wgt in window.grid_slaves():
             wgt.destroy()
 
     @property
     def main_row(self):
         self.main_row_count += 1
-        return self.main_row_count - 1
+        return self.main_row_count
+
+    @property
+    def main_row_same(self):
+        if self.main_row_count == -1:
+            self.main_row_count += 1
+            return self.main_row_same
+        return self.main_row_count
 
 
 class MainWindow(Window):
@@ -29,11 +36,14 @@ class MainWindow(Window):
         self.search_label.grid(row=0, column=0)
         self.search_entry = Entry(self.search_frame, width=19)
         self.search_entry.grid(row=0, column=1)
-        self.search_button = Button(self.search_frame, text='SEARCH', command=self.search)
+        self.search_button = Button(
+            self.search_frame, text='SEARCH', command=self.search)
         self.search_button.grid(row=0, column=2)
 
-        self.create_new_button = Button(window, text='Create New', command=self.create_new_func)
-        self.create_new_button.grid(row=self.main_row, column=0, padx=30, pady=5)
+        self.create_new_button = Button(
+            window, text='Create New', command=self.create_new_func)
+        self.create_new_button.grid(
+            row=self.main_row, column=0, padx=30, pady=5)
 
     def create_new_func(self):
         return CreateNewWindow(self.window, MainWindow)
@@ -49,10 +59,12 @@ class CreateNewWindow(Window):
         # PRODUCT NAME
         # product name frame
         self.product_name_frame = LabelFrame(window)
-        self.product_name_frame.grid(row=self.main_row, column=0, columnspan=2, pady=5)
+        self.product_name_frame.grid(
+            row=self.main_row, column=0, columnspan=2, pady=5)
 
         # product name label
-        self.product_name_label = Label(self.product_name_frame, text='Product name:')
+        self.product_name_label = Label(
+            self.product_name_frame, text='Product name:')
         self.product_name_label.grid(row=0, column=0)
 
         # product name entry
@@ -62,10 +74,12 @@ class CreateNewWindow(Window):
         # PRODUCT TYPE
         # product type frame
         self.product_type_frame = LabelFrame(window)
-        self.product_type_frame.grid(row=self.main_row, column=0, columnspan=2, pady=5)
+        self.product_type_frame.grid(
+            row=self.main_row, column=0, columnspan=2, pady=5)
 
         # product type label
-        self.product_type_label = Label(self.product_type_frame, text='Product type:')
+        self.product_type_label = Label(
+            self.product_type_frame, text='Product type:')
         self.product_type_label.grid(row=0, column=0)
 
         # product type entry
@@ -75,7 +89,8 @@ class CreateNewWindow(Window):
         # PRICE
         # price frame
         self.price_frame = LabelFrame(window)
-        self.price_frame.grid(row=self.main_row, column=0, columnspan=2, pady=5)
+        self.price_frame.grid(row=self.main_row, column=0,
+                              columnspan=2, pady=5)
 
         # price label
         self.price_label = Label(self.price_frame, text='Price:')
@@ -88,7 +103,8 @@ class CreateNewWindow(Window):
         # CURRENCY AND UNIT
         # currency and unit frame
         self.currency_unit_frame = LabelFrame(window)
-        self.currency_unit_frame.grid(row=self.main_row, column=0, columnspan=2, pady=5)
+        self.currency_unit_frame.grid(
+            row=self.main_row, column=0, columnspan=2, pady=5)
 
         # currency label
         self.currency_label = Label(self.currency_unit_frame, text='Currency:')
@@ -110,10 +126,12 @@ class CreateNewWindow(Window):
         # LOCATION
         # location frame
         self.location_frame = LabelFrame(window)
-        self.location_frame.grid(row=self.main_row, column=0, columnspan=2, pady=5)
+        self.location_frame.grid(
+            row=self.main_row, column=0, columnspan=2, pady=5)
 
         # location name label
-        self.location_name_label = Label(self.location_frame, text='Location name:')
+        self.location_name_label = Label(
+            self.location_frame, text='Location name:')
         self.location_name_label.grid(row=0, column=0)
 
         # location name entry
@@ -122,14 +140,17 @@ class CreateNewWindow(Window):
 
         # general location frame
         self.general_location_frame = LabelFrame(window)
-        self.general_location_frame.grid(row=self.main_row, column=0, columnspan=2, pady=5)
+        self.general_location_frame.grid(
+            row=self.main_row, column=0, columnspan=2, pady=5)
 
         # general location label
-        self.general_location_label = Label(self.general_location_frame, text='General location:')
+        self.general_location_label = Label(
+            self.general_location_frame, text='General location:')
         self.general_location_label.grid(row=0, column=2)
 
         # general location entry
-        self.general_location_entry = Entry(self.general_location_frame, width=21)
+        self.general_location_entry = Entry(
+            self.general_location_frame, width=21)
         self.general_location_entry.grid(row=0, column=3)
 
         # DATE
@@ -172,13 +193,12 @@ class CreateNewWindow(Window):
         # CANCEL BUTTON
         self.cancel_button = Button(window, text='CANCEL', command=self.cancel)
         self.cancel_button.grid(row=self.main_row, column=0, pady=5)
-        self.main_row_count -= 1
-        # cancel function
 
         # CREATE BUTTON
-        self.create_execute_button = Button(window, text='CREATE', command=self.create_execute)
-        self.create_execute_button.grid(row=self.main_row, column=1, pady=5)
-        # create execute function
+        self.create_execute_button = Button(
+            window, text='CREATE', command=self.create_execute)
+        self.create_execute_button.grid(
+            row=self.main_row_same, column=1, pady=5)
 
         # # # SIZE REFERENCE # # #
         self.lbl = Label(window, text='020406081012141618202224262830323436')
@@ -198,7 +218,8 @@ class CreateNewWindow(Window):
         if self.validate():
 
             # creating full date
-            submit_date = self.year_entry.get() + '-' + self.month_entry.get() + '-' + self.day_entry.get()
+            submit_date = self.year_entry.get() + '-' + self.month_entry.get() + \
+                '-' + self.day_entry.get()
 
             # submitting to database
             return create_in_db(
@@ -211,7 +232,7 @@ class CreateNewWindow(Window):
                 currency=self.currency_entry.get(),
                 unit=self.unit_entry.get(),
                 date=submit_date
-            )#, CreateNewWindow(self.window, self.previous_window)
+            )  # , CreateNewWindow(self.window, self.previous_window)
 
     def validate(self):
         # validating field length
@@ -259,12 +280,14 @@ class SearchWindow(Window):
         self.query = query
 
         self.search_frame = LabelFrame(window)
-        self.search_frame.grid(row=self.main_row, column=0, pady=5, columnspan=4)
+        self.search_frame.grid(
+            row=self.main_row, column=0, pady=5, columnspan=4)
         self.search_label = Label(self.search_frame, text='Search:')
         self.search_label.grid(row=0, column=0)
         self.search_entry = Entry(self.search_frame, width=19)
         self.search_entry.grid(row=0, column=1)
-        self.search_button = Button(self.search_frame, text='SEARCH')
+        self.search_button = Button(
+            self.search_frame, text='SEARCH', command=self.search)
         self.search_button.grid(row=0, column=2)
 
         # iterating through db_query
@@ -272,43 +295,70 @@ class SearchWindow(Window):
         for item in search_db(self.query):
             self.row_1 = self.main_row
             self.row_2 = self.main_row
-            Label(window, text=f'{self.count}').grid(row=self.row_1, column=0, rowspan=2)
-            Label(window, text=item[0]).grid(row=self.row_1, column=1, pady=5, padx=2)
-            Label(window, text=f'{item[2]} {item[3]}').grid(row=self.row_1, column=2, pady=5, padx=2)
-            Label(window, text=f'{item[5]} - {item[6]}').grid(row=self.row_2, column=1, padx=2, columnspan=2)
-            Button(window, text='details', command=self.open_details(item)).grid(row=self.row_1, rowspan=2, column=3, padx=2)
+            Label(window, text=f'{self.count}').grid(
+                row=self.row_1, column=0, rowspan=2)
+            Label(window, text=item[0]).grid(
+                row=self.row_1, column=1, pady=5, padx=2)
+            Label(window, text=f'{item[2]} {item[3]}').grid(
+                row=self.row_1, column=2, pady=5, padx=2)
+            Label(window, text=f'{item[5]} - {item[6]}').grid(
+                row=self.row_2, column=1, padx=2, columnspan=2)
+            Button(window, text='details', command=self.open_details(
+                item, self.query)).grid(row=self.row_1, rowspan=2, column=3, padx=2)
             Label(window, text='-'*55).grid(row=self.main_row, columnspan=4)
             self.count += 1
 
         # setting up buttons
-        self.create_new_button = Button(window, text='Create New', command=self.create_new_func)
-        self.create_new_button.grid(row=self.main_row, column=0, padx=30, pady=5, columnspan=4)
+        self.create_new_button = Button(
+            window, text='Create New', command=self.create_new_func)
+        self.create_new_button.grid(
+            row=self.main_row, column=0, padx=30, pady=5, columnspan=4)
 
     def create_new_func(self):
         return CreateNewWindow(self.window, MainWindow)
 
     # create button for details
-    def open_details(self, item):
+    def open_details(self, item, query):
         saving_item = item
+        saving_query = query
         window = self.window
 
         def inner():
-            return DetailWindow(window, CreateNewWindow, saving_item)
+            return DetailWindow(window, SearchWindow, saving_item, saving_query)
         return inner
 
+    def search(self):
+        return SearchWindow(self.window, MainWindow, self.search_entry.get())
 
 
 class DetailWindow(Window):
-    def __init__(self, window, previous_window, item):
+    def __init__(self, window, previous_window, item, query):
         super().__init__(window, previous_window)
         self.item = item
+        self.query = query
 
         # product name
         self.product_name_label = Label(window, text=self.item[0])
-        self.product_name_label.grid(row=self.main_row, column=0, columnspan=4)
+        self.product_name_label.grid(row=self.main_row, column=0, columnspan=3)
 
         # product type
         self.product_type_label = Label(window, text=self.item[1])
-        self.product_type_label.grid(row=self.main_row, column=0, columnspan=4)
+        self.product_type_label.grid(row=self.main_row, column=0, columnspan=3)
 
+        # # # SIZE REFERENCE # # #
+        self.lbl = Label(window, text='020406081012141618202224262830323436')
+        self.lbl.grid(row=self.main_row, column=0, columnspan=3)
+        self.et = Entry(window, width=36)
+        self.et.grid(row=self.main_row, column=0, columnspan=3)
+        self.fr = LabelFrame(window)
+        self.fr.grid(row=self.main_row, column=0, columnspan=3)
+        self.et_fr = Entry(self.fr, width=36)
+        self.et_fr.grid(row=0, column=0)
 
+        # BACK BUTTON
+        self.back_button = Button(window, text='BACK', command=self.back)
+        self.back_button.grid(row=self.main_row, column=0,
+                              pady=5, columnspan=3)
+
+    def back(self):
+        return self.previous_window(self.window, self.previous_window, self.query)
