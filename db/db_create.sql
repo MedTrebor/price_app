@@ -15,6 +15,7 @@ CREATE TABLE prices(
 	product_id INTEGER,
 	location_id INTEGER,
 	price REAL(9,2),
+	currency TEXT,
 	unit TEXT,
 	price_date TEXT,
 	PRIMARY KEY(product_id, location_id),
