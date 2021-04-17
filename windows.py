@@ -1,10 +1,8 @@
 from tkinter import *
-from tkinter import filedialog, messagebox
+from tkinter import messagebox
 from datetime import date
-import io
 import os
 from database import create_in_db, search_db
-from PIL import Image as Image_pil, ImageTk as ImageTk_pil
 
 
 class Window:
@@ -46,7 +44,6 @@ class MainWindow(Window):
 
 class CreateNewWindow(Window):
     def __init__(self, window, previous_window):
-        self.picture = io.BytesIO()
         super().__init__(window, previous_window)
 
         # PRODUCT NAME
@@ -62,12 +59,6 @@ class CreateNewWindow(Window):
         self.product_name_entry = Entry(self.product_name_frame, width=23)
         self.product_name_entry.grid(row=0, column=1)
 
-        # PICTURE
-        # picture button
-        self.picture_button = Button(window, text='Upload picture', command=self.upload)
-        self.picture_button.grid(row=self.main_row, column=0, columnspan=2, pady=5)
-        # create upload window
-
         # PRODUCT TYPE
         # product type frame
         self.product_type_frame = LabelFrame(window)
@@ -81,25 +72,39 @@ class CreateNewWindow(Window):
         self.product_type_entry = Entry(self.product_type_frame, width=24)
         self.product_type_entry.grid(row=0, column=1)
 
-        # PRICE AND UNIT
-        # price and unit frame
-        self.price_and_unit_frame = LabelFrame(window)
-        self.price_and_unit_frame.grid(row=self.main_row, column=0, columnspan=2, pady=5)
+        # PRICE
+        # price frame
+        self.price_frame = LabelFrame(window)
+        self.price_frame.grid(row=self.main_row, column=0, columnspan=2, pady=5)
 
         # price label
-        self.price_label = Label(self.price_and_unit_frame, text='Price:')
+        self.price_label = Label(self.price_frame, text='Price:')
         self.price_label.grid(row=0, column=0)
 
         # price entry
-        self.price_entry = Entry(self.price_and_unit_frame, width=15)
+        self.price_entry = Entry(self.price_frame, width=30)
         self.price_entry.grid(row=0, column=1)
 
+        # CURRENCY AND UNIT
+        # currency and unit frame
+        self.currency_unit_frame = LabelFrame(window)
+        self.currency_unit_frame.grid(row=self.main_row, column=0, columnspan=2, pady=5)
+
+        # currency label
+        self.currency_label = Label(self.currency_unit_frame, text='Currency:')
+        self.currency_label.grid(row=0, column=0)
+
+        # currency entry
+        self.currency_entry = Entry(self.currency_unit_frame, width=8)
+        self.currency_entry.grid(row=0, column=1)
+        self.currency_entry.insert(0, 'RSD')
+
         # unit label
-        self.unit_label = Label(self.price_and_unit_frame, text='Unit:')
+        self.unit_label = Label(self.currency_unit_frame, text='Unit:')
         self.unit_label.grid(row=0, column=2)
 
         # unit entry
-        self.unit_entry = Entry(self.price_and_unit_frame, width=10)
+        self.unit_entry = Entry(self.currency_unit_frame, width=14)
         self.unit_entry.grid(row=0, column=3)
 
         # LOCATION
@@ -188,30 +193,6 @@ class CreateNewWindow(Window):
     def cancel(self):
         return self.previous_window(self.window, self.previous_window)
 
-    def upload(self):
-        # opening file browser
-        filename = filedialog.askopenfilename(
-            initialdir=os.getcwd(),
-            title='Select image',
-            filetypes=(
-                ('all files', '*.*'),
-                ('jpg image', '*.jpg'),
-                ('jpeg image', '*.jpeg'),
-                ('png image', '*.png')
-            )
-        )
-        try:
-            # opening and cropping image
-            img = Image_pil.open(filename)
-            cropped_img = img.crop((0, 0, min(img.size), min(img.size)))
-            cropped_img.thumbnail((300, 300))
-
-            # converting to bytes
-            self.picture = io.BytesIO()
-            cropped_img.save(self.picture, format='PNG')
-        except AttributeError:
-            pass
-
     def create_execute(self):
         # initiating validation
         if self.validate():
@@ -219,32 +200,18 @@ class CreateNewWindow(Window):
             # creating full date
             submit_date = self.year_entry.get() + '-' + self.month_entry.get() + '-' + self.day_entry.get()
 
-            # submitting to database with no picture
-            if len(self.picture.getvalue()) == 0:
-                return create_in_db(
-                    product_type=self.product_type_entry.get(),
-                    product_name=self.product_name_entry.get(),
-                    location_name=self.location_name_entry.get(),
-                    city=self.city_entry.get(),
-                    general_location=self.general_location_entry.get(),
-                    price=self.price_entry.get(),
-                    unit=self.unit_entry.get(),
-                    date=submit_date
-                )#, CreateNewWindow(self.window, self.previous_window)
-
-            # submitting to database with picture
-            else:
-                return create_in_db(
-                    product_type=self.product_type_entry.get(),
-                    product_name=self.product_name_entry.get(),
-                    picture=self.picture,
-                    location_name=self.location_name_entry.get(),
-                    city=self.city_entry.get(),
-                    general_location=self.general_location_entry.get(),
-                    price=self.price_entry.get(),
-                    unit=self.unit_entry.get(),
-                    date=submit_date
-                )#, CreateNewWindow(self.window, self.previous_window)
+            # submitting to database
+            return create_in_db(
+                product_type=self.product_type_entry.get(),
+                product_name=self.product_name_entry.get(),
+                location_name=self.location_name_entry.get(),
+                city=self.city_entry.get(),
+                general_location=self.general_location_entry.get(),
+                price=self.price_entry.get(),
+                currency=self.currency_entry.get(),
+                unit=self.unit_entry.get(),
+                date=submit_date
+            )#, CreateNewWindow(self.window, self.previous_window)
 
     def validate(self):
         # validating field length
@@ -253,6 +220,8 @@ class CreateNewWindow(Window):
         elif len(self.product_type_entry.get()) == 0:
             return self.warning()
         elif len(self.price_entry.get()) == 0 or len(self.price_entry.get()) > 9:
+            return self.warning()
+        elif len(self.currency_entry.get()) == 0:
             return self.warning()
         elif len(self.unit_entry.get()) == 0:
             return self.warning()
@@ -305,7 +274,7 @@ class SearchWindow(Window):
             self.row_2 = self.main_row
             Label(window, text=f'{self.count}').grid(row=self.row_1, column=0, rowspan=2)
             Label(window, text=item[0]).grid(row=self.row_1, column=1, pady=5, padx=2)
-            Label(window, text=f'{item[3]} din.').grid(row=self.row_1, column=2, pady=5, padx=2)
+            Label(window, text=f'{item[2]} {item[3]}').grid(row=self.row_1, column=2, pady=5, padx=2)
             Label(window, text=f'{item[5]} - {item[6]}').grid(row=self.row_2, column=1, padx=2, columnspan=2)
             Button(window, text='details', command=self.open_details(item)).grid(row=self.row_1, rowspan=2, column=3, padx=2)
             Label(window, text='-'*55).grid(row=self.main_row, columnspan=4)
@@ -332,22 +301,14 @@ class SearchWindow(Window):
 class DetailWindow(Window):
     def __init__(self, window, previous_window, item):
         super().__init__(window, previous_window)
-        self.item = search_db('mleko')
+        self.item = item
 
-        if self.item[1] is not None:
-            # product name
-            self.product_name_label = Label(window, text=item[0])
-            self.product_name_label.grid(row=self.main_row, column=0, columnspan=4)
+        # product name
+        self.product_name_label = Label(window, text=self.item[0])
+        self.product_name_label.grid(row=self.main_row, column=0, columnspan=4)
 
-            # picture
-            self.img = Image_pil.open(io.BytesIO(self.item[0][1]))
-            self.picture = ImageTk_pil.PhotoImage(self.img)
-            self.picture_label = Label(window, image=self.picture)
-            self.picture_label.grid(row=self.main_row, column=0, columnspan=4)
-            # # # CAN'T PRODUCE PICTURE # # #
-
-            # product type
-            self.product_type_label = Label(window, text=item[2])
-            self.product_type_label.grid(row=self.main_row, column=0, columnspan=4)
+        # product type
+        self.product_type_label = Label(window, text=self.item[1])
+        self.product_type_label.grid(row=self.main_row, column=0, columnspan=4)
 
 

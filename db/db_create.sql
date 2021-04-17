@@ -2,7 +2,6 @@ CREATE TABLE products(
 	product_id INTEGER PRIMARY KEY AUTOINCREMENT,
 	product_type TEXT,
 	product_name TEXT,
-	picture BLOB
 );
 
 CREATE TABLE locations(

@@ -8,3 +8,6 @@
 __pycache__/
 *test*.py
 /db/*test*.sql
+*.jpg
+old/
+*old*.py
