@@ -35,6 +35,8 @@ class MainWindow(Window):
         self.search_label = Label(self.search_frame, text='Search:')
         self.search_label.grid(row=0, column=0)
         self.search_entry = Entry(self.search_frame, width=19)
+        self.search_entry.focus_set()
+        self.search_entry.bind('<Return>', self.search)
         self.search_entry.grid(row=0, column=1)
         self.search_button = Button(
             self.search_frame, text='SEARCH', command=self.search)
@@ -48,7 +50,7 @@ class MainWindow(Window):
     def create_new_func(self):
         return CreateNewWindow(self.window, MainWindow)
 
-    def search(self):
+    def search(self, *args):
         return SearchWindow(self.window, MainWindow, self.search_entry.get())
 
 
@@ -205,10 +207,6 @@ class CreateNewWindow(Window):
         self.lbl.grid(row=self.main_row, column=0, columnspan=2)
         self.et = Entry(window, width=36)
         self.et.grid(row=self.main_row, column=0, columnspan=2)
-        self.fr = LabelFrame(window)
-        self.fr.grid(row=self.main_row, column=0, columnspan=2)
-        self.et_fr = Entry(self.fr, width=36)
-        self.et_fr.grid(row=0, column=0)
 
     def cancel(self):
         return self.previous_window(self.window, self.previous_window)
@@ -286,6 +284,9 @@ class SearchWindow(Window):
         self.search_label.grid(row=0, column=0)
         self.search_entry = Entry(self.search_frame, width=19)
         self.search_entry.grid(row=0, column=1)
+        self.search_entry.focus_set()
+        self.search_entry.bind('<Return>', self.search)
+        self.search_entry.insert(0, self.query)
         self.search_button = Button(
             self.search_frame, text='SEARCH', command=self.search)
         self.search_button.grid(row=0, column=2)
@@ -295,20 +296,25 @@ class SearchWindow(Window):
         for item in search_db(self.query):
             self.row_1 = self.main_row
             self.row_2 = self.main_row
-            Label(window, text=f'{self.count}').grid(
-                row=self.row_1, column=0, rowspan=2)
+            self.row_3 = self.main_row
+            Label(window, text=f'{self.count}.').grid(
+                row=self.row_1, column=0, rowspan=3)
             Label(window, text=item[0]).grid(
-                row=self.row_1, column=1, pady=5, padx=2)
+                row=self.row_1, column=1, pady=5)
             Label(window, text=f'{item[2]} {item[3]}').grid(
-                row=self.row_1, column=2, pady=5, padx=2)
-            Label(window, text=f'{item[5]} - {item[6]}').grid(
-                row=self.row_2, column=1, padx=2, columnspan=2)
+                row=self.row_1, column=2, pady=5)
+            Label(window, text=item[5]).grid(
+                row=self.row_2, column=1)
+            Label(window, text=item[7]).grid(
+                row=self.row_2, column=2, pady=5)
+            Label(window, text=item[6]).grid(
+                row=self.row_3, column=1)
             Button(window, text='details', command=self.open_details(
-                item, self.query)).grid(row=self.row_1, rowspan=2, column=3, padx=2)
+                item, self.query)).grid(row=self.row_3, column=2)
             Label(window, text='-'*55).grid(row=self.main_row, columnspan=4)
             self.count += 1
 
-        # setting up buttons
+        # create button
         self.create_new_button = Button(
             window, text='Create New', command=self.create_new_func)
         self.create_new_button.grid(
@@ -317,7 +323,7 @@ class SearchWindow(Window):
     def create_new_func(self):
         return CreateNewWindow(self.window, MainWindow)
 
-    # create button for details
+    # open DetailWindow
     def open_details(self, item, query):
         saving_item = item
         saving_query = query
@@ -327,7 +333,7 @@ class SearchWindow(Window):
             return DetailWindow(window, SearchWindow, saving_item, saving_query)
         return inner
 
-    def search(self):
+    def search(self, *args):
         return SearchWindow(self.window, MainWindow, self.search_entry.get())
 
 
@@ -337,28 +343,46 @@ class DetailWindow(Window):
         self.item = item
         self.query = query
 
-        # product name
-        self.product_name_label = Label(window, text=self.item[0])
-        self.product_name_label.grid(row=self.main_row, column=0, columnspan=3)
+        # PRODUCT NAME
+        # product name frame
+        self.product_name_frame = LabelFrame(window)
+        self.product_name_frame.grid(row=self.main_row, column=0)
 
-        # product type
-        self.product_type_label = Label(window, text=self.item[1])
-        self.product_type_label.grid(row=self.main_row, column=0, columnspan=3)
+        # product name label
+        self.product_name_label = Label(
+            self.product_name_frame, text='Product name:', width=15, anchor=W)
+        self.product_name_label.grid(row=0, column=0)
 
-        # # # SIZE REFERENCE # # #
-        self.lbl = Label(window, text='020406081012141618202224262830323436')
-        self.lbl.grid(row=self.main_row, column=0, columnspan=3)
-        self.et = Entry(window, width=36)
-        self.et.grid(row=self.main_row, column=0, columnspan=3)
-        self.fr = LabelFrame(window)
-        self.fr.grid(row=self.main_row, column=0, columnspan=3)
-        self.et_fr = Entry(self.fr, width=36)
-        self.et_fr.grid(row=0, column=0)
+        # product name item label
+        self.product_name_item_label = Label(
+            self.product_name_frame, text=self.item[0], width=20, anchor=E)
+        self.product_name_item_label.grid(row=0, column=1)
+
+        # PRODUCT TYPE
+        # product type frame
+        self.product_type_frame = LabelFrame(window)
+        self.product_type_frame.grid(row=self.main_row, column=0)
+
+        # product type label
+        self.product_type_label = Label(
+            self.product_type_frame, text='Product type:', width=15, anchor=W)
+        self.product_type_label.grid(row=0, column=0)
+
+        # product type item label
+        self.product_type_item_label = Label(
+            self.product_type_frame, text=self.item[1], width=20, anchor=E)
+        self.product_type_item_label.grid(row=0, column=1)
 
         # BACK BUTTON
         self.back_button = Button(window, text='BACK', command=self.back)
         self.back_button.grid(row=self.main_row, column=0,
-                              pady=5, columnspan=3)
+                              pady=5)
+
+        # # # SIZE REFERENCE # # #
+        self.lbl = Label(window, text='020406081012141618202224262830323436')
+        self.lbl.grid(row=self.main_row, column=0)
+        self.et = Entry(window, width=36)
+        self.et.grid(row=self.main_row, column=0)
 
     def back(self):
         return self.previous_window(self.window, self.previous_window, self.query)

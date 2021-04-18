@@ -5,10 +5,10 @@ from database import search_db
 root = Tk()
 
 
-windows.MainWindow(root, windows.MainWindow)
+# windows.MainWindow(root, windows.MainWindow)
 query = search_db('mleko')
 # print(query)
-# windows.DetailWindow(root, windows.MainWindow, query[0])
+windows.DetailWindow(root, windows.SearchWindow, query[0], 'mleko')
 # Label(root, image=ImageTkPil.BitmapImage(ImagePil.open(io.BytesIO(query[0][1]))))
 
 root.mainloop()
