@@ -11,3 +11,4 @@ __pycache__/
 *.jpg
 old/
 *old*.py
+.vscode/

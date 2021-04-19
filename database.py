@@ -167,12 +167,10 @@ def search_db(search_phrase):
 	        )
         )
         AND products.product_type = :product_type
-        ORDER BY prices.price;
+        ORDER BY prices.price DESC;
         """,
         {
             'product_type': search_phrase
         }
     )
     return cur.fetchall()
-
-# print(search_db('kobasica'))
