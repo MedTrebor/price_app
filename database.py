@@ -274,6 +274,69 @@ def update_location_db(**kwargs):
     )
     conn.commit()
 
+# DELETE ENTRY
+
+
+def delete_db(**kwargs):
+    # connecting to db
+    conn = sqlite3.connect('./db/test.sqlite3')
+    cur = conn.cursor()
+
+    # assigning values to variables
+    product_id = kwargs.get('product_id')
+    location_id = kwargs.get('location_id')
+
+    # deleting price
+    cur.execute(
+        """
+        DELETE FROM prices
+        WHERE product_id = :product_id AND location_id = :location_id;
+        """,
+        {
+            'product_id': product_id,
+            'location_id': location_id
+        }
+    )
+
+    # checking for same product
+    cur.execute(
+        """
+        SELECT product_id
+        FROM prices
+        WHERE product_id = :product_id;
+        """,
+        {'product_id': product_id}
+    )
+    # if no prices for product, deleting product
+    if cur.fetchall() == []:
+        cur.execute(
+            """
+            DELETE FROM products
+            WHERE product_id = :product_id;
+            """,
+            {'product_id': product_id}
+        )
+
+    # checking for same location
+    cur.execute(
+        """
+        SELECT location_id
+        FROM prices
+        WHERE location_id = :location_id;
+        """,
+        {'location_id': location_id}
+    )
+    # if no prices for location, deleting location
+    if cur.fetchall() == []:
+        cur.execute(
+            """
+                DELETE FROM locations
+                WHERE location_id = :location_id;
+                """,
+            {'location_id': location_id}
+        )
+    conn.commit()
+
 
 if __name__ == '__main__':
     print(search_db('mleko'))

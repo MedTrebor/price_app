@@ -6,7 +6,8 @@ from database import (
     search_db,
     update_price_db,
     update_product_db,
-    update_location_db
+    update_location_db,
+    delete_db
 )
 
 
@@ -77,7 +78,7 @@ class MainWindow(Window):
 class CreateNewWindow(Window):
     def __init__(self, window, previous_window, **kwargs):
         super().__init__(window, previous_window)
-        self.query = kwargs.get('query')
+        self.query = kwargs.get('query', [('none', 'none')])
 
         # PRODUCT NAME
         # product name frame
@@ -91,7 +92,7 @@ class CreateNewWindow(Window):
         self.product_name_label.grid(row=0, column=0)
 
         # product name entry
-        self.product_name_entry = Entry(self.product_name_frame, width=23)
+        self.product_name_entry = Entry(self.product_name_frame, width=25)
         self.product_name_entry.grid(row=0, column=1)
         self.product_name_entry.focus_set()
 
@@ -107,7 +108,7 @@ class CreateNewWindow(Window):
         self.product_type_label.grid(row=0, column=0)
 
         # product type entry
-        self.product_type_entry = Entry(self.product_type_frame, width=24)
+        self.product_type_entry = Entry(self.product_type_frame, width=26)
         self.product_type_entry.grid(row=0, column=1)
 
         # PRICE
@@ -121,7 +122,7 @@ class CreateNewWindow(Window):
         self.price_label.grid(row=0, column=0)
 
         # price entry
-        self.price_entry = Entry(self.price_frame, width=30)
+        self.price_entry = Entry(self.price_frame, width=32)
         self.price_entry.grid(row=0, column=1)
 
         # CURRENCY AND UNIT
@@ -135,7 +136,7 @@ class CreateNewWindow(Window):
         self.currency_label.grid(row=0, column=0)
 
         # currency entry
-        self.currency_entry = Entry(self.currency_unit_frame, width=8)
+        self.currency_entry = Entry(self.currency_unit_frame, width=9)
         self.currency_entry.grid(row=0, column=1)
         self.currency_entry.insert(0, 'RSD')
 
@@ -144,7 +145,7 @@ class CreateNewWindow(Window):
         self.unit_label.grid(row=0, column=2)
 
         # unit entry
-        self.unit_entry = Entry(self.currency_unit_frame, width=14)
+        self.unit_entry = Entry(self.currency_unit_frame, width=15)
         self.unit_entry.grid(row=0, column=3)
 
         # LOCATION
@@ -159,7 +160,7 @@ class CreateNewWindow(Window):
         self.location_name_label.grid(row=0, column=0)
 
         # location name entry
-        self.location_name_entry = Entry(self.location_frame, width=22)
+        self.location_name_entry = Entry(self.location_frame, width=24)
         self.location_name_entry.grid(row=0, column=1)
 
         # general location frame
@@ -174,7 +175,7 @@ class CreateNewWindow(Window):
 
         # general location entry
         self.general_location_entry = Entry(
-            self.general_location_frame, width=21)
+            self.general_location_frame, width=23)
         self.general_location_entry.grid(row=0, column=3)
 
         # DATE
@@ -210,7 +211,7 @@ class CreateNewWindow(Window):
         self.city_label.grid(row=0, column=4)
 
         # city entry
-        self.city_entry = Entry(self.city_frame, width=31)
+        self.city_entry = Entry(self.city_frame, width=33)
         self.city_entry.grid(row=0, column=5)
         self.city_entry.insert(0, 'Novi Sad')
 
@@ -229,9 +230,9 @@ class CreateNewWindow(Window):
         self.window.bind('<Escape>', self.cancel)
 
         # # # SIZE REFERENCE # # #
-        self.lbl = Label(window, text='020406081012141618202224262830323436')
+        self.lbl = Label(window, text='02040608101214161820222426283032343637')
         self.lbl.grid(row=self.main_row, column=0, columnspan=2)
-        self.et = Entry(window, width=36)
+        self.et = Entry(window, width=38)
         self.et.grid(row=self.main_row, column=0, columnspan=2)
 
     def cancel(self, *args):
@@ -247,7 +248,7 @@ class CreateNewWindow(Window):
                 '-' + self.day_entry.get()
 
             # submitting to database
-            return create_in_db(
+            create_in_db(
                 product_type=self.product_type_entry.get(),
                 product_name=self.product_name_entry.get(),
                 location_name=self.location_name_entry.get(),
@@ -257,7 +258,9 @@ class CreateNewWindow(Window):
                 currency=self.currency_entry.get(),
                 unit=self.unit_entry.get(),
                 date=submit_date
-            ), CreateNewWindow(self.window, self.previous_window)
+            )
+            query = search_db(self.query[0][1])
+            CreateNewWindow(self.window, self.previous_window, query=query)
 
     def validate(self):
         # validating field length
@@ -572,7 +575,8 @@ class DetailWindow(Window):
         self.edit_button.grid(row=self.main_row, column=0, pady=5)
 
         # DELETE BUTTON
-        self.delete_button = Button(self.window, text='DELETE')
+        self.delete_button = Button(
+            self.window, text='DELETE', command=self.delete)
         self.delete_button.grid(row=self.main_row_same, column=2)
 
         # binding escape
@@ -617,6 +621,14 @@ class DetailWindow(Window):
 
     def edit(self, *args):
         return UpdatePriceWindow(self.window, DetailWindow, self.item_no, self.query)
+
+    def delete(self):
+        delete_db(
+            product_id=self.item[9],
+            location_id=self.item[10]
+        )
+        query = search_db(self.item[1])
+        return self.previous_window(self.window, MainWindow, query)
 
 
 # # # UPDATE PRICE # # #
