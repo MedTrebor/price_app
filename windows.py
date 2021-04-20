@@ -12,9 +12,11 @@ class Window:
         for wgt in window.grid_slaves():
             wgt.destroy()
 
-        # unbinding scroll
+        # unbinding
         self.window.unbind('<Button-4>')
         self.window.unbind('<Button-5>')
+        self.window.unbind('<Return>')
+        self.window.unbind('<Escape>')
 
     @property
     def main_row(self):
@@ -54,9 +56,9 @@ class MainWindow(Window):
         return CreateNewWindow(self.window, MainWindow)
 
     def search(self, *args):
-        entry = self.search_entry.get()
-        if entry != '':
-            return SearchWindow(self.window, MainWindow, search_db(entry))
+        entry = search_db(self.search_entry.get())
+        if entry != []:
+            return SearchWindow(self.window, MainWindow, entry)
         else:
             return MainWindow(self.window, MainWindow)
 
@@ -81,6 +83,7 @@ class CreateNewWindow(Window):
         # product name entry
         self.product_name_entry = Entry(self.product_name_frame, width=23)
         self.product_name_entry.grid(row=0, column=1)
+        self.product_name_entry.focus_set()
 
         # PRODUCT TYPE
         # product type frame
@@ -211,16 +214,20 @@ class CreateNewWindow(Window):
         self.create_execute_button.grid(
             row=self.main_row_same, column=1, pady=5)
 
+        # bind <Return> and <Escape>
+        self.window.bind('<Return>', self.create_execute)
+        self.window.bind('<Escape>', self.cancel)
+
         # # # SIZE REFERENCE # # #
         self.lbl = Label(window, text='020406081012141618202224262830323436')
         self.lbl.grid(row=self.main_row, column=0, columnspan=2)
         self.et = Entry(window, width=36)
         self.et.grid(row=self.main_row, column=0, columnspan=2)
 
-    def cancel(self):
+    def cancel(self, *args):
         return self.previous_window(self.window, self.previous_window, self.query)
 
-    def create_execute(self):
+    def create_execute(self, *args):
         # initiating validation
         if self.validate():
 
