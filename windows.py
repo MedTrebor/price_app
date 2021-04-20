@@ -1,9 +1,16 @@
 from tkinter import *
 from tkinter import messagebox
 from datetime import date
-from database import create_in_db, search_db
+from database import (
+    create_in_db,
+    search_db,
+    update_price_db,
+    update_product_db,
+    update_location_db
+)
 
 
+# # # WINDOW PARENT # # #
 class Window:
     def __init__(self, window, previous_window):
         self.window = window
@@ -33,6 +40,7 @@ class Window:
         return self.main_row_count
 
 
+# # # MAIN WINDOW # # #
 class MainWindow(Window):
     def __init__(self, window, previous_window, *args):
         super().__init__(window, previous_window)
@@ -65,6 +73,7 @@ class MainWindow(Window):
             return MainWindow(self.window, MainWindow)
 
 
+# # # CREATE WINDOW # # #
 class CreateNewWindow(Window):
     def __init__(self, window, previous_window, **kwargs):
         super().__init__(window, previous_window)
@@ -226,11 +235,12 @@ class CreateNewWindow(Window):
         self.et.grid(row=self.main_row, column=0, columnspan=2)
 
     def cancel(self, *args):
-        return self.previous_window(self.window, self.previous_window, self.query)
+        query = search_db(self.query[0][1])
+        return self.previous_window(self.window, self.previous_window, query)
 
     def create_execute(self, *args):
         # initiating validation
-        if self.validate():
+        if self.validate() is True:
 
             # creating full date
             submit_date = self.year_entry.get() + '-' + self.month_entry.get() + \
@@ -247,7 +257,7 @@ class CreateNewWindow(Window):
                 currency=self.currency_entry.get(),
                 unit=self.unit_entry.get(),
                 date=submit_date
-            )  # , CreateNewWindow(self.window, self.previous_window)
+            ), CreateNewWindow(self.window, self.previous_window)
 
     def validate(self):
         # validating field length
@@ -269,7 +279,7 @@ class CreateNewWindow(Window):
             return self.warning()
         elif len(self.month_entry.get()) == 0 or len(self.day_entry.get()) > 2:
             return self.warning()
-        elif len(self.month_entry.get()) == 0 or len(self.day_entry.get()) > 4:
+        elif len(self.year_entry.get()) == 0 or len(self.day_entry.get()) > 4:
             return self.warning()
         elif len(self.city_entry.get()) == 0:
             return self.warning()
@@ -289,6 +299,7 @@ class CreateNewWindow(Window):
         return messagebox.showwarning('Warning', 'Entered fields are not valid')
 
 
+# # # SEARCH WINDOW # # #
 class SearchWindow(Window):
     def __init__(self, window, previous_window, query, *args):
         super().__init__(window, previous_window)
@@ -420,6 +431,7 @@ class SearchWindow(Window):
         self.canvas.yview_scroll(direction, UNITS)
 
 
+# # # DETAIL WINDOW # # #
 class DetailWindow(Window):
     def __init__(self, window, previous_window, item_no, query):
         super().__init__(window, previous_window)
@@ -506,10 +518,10 @@ class DetailWindow(Window):
         self.general_location_item_label.grid(row=0, column=1)
 
         # DATE
-        srb_date = self.item[7]
-        day = srb_date[-2:]
-        month = srb_date[5:7]
-        year = srb_date[:4]
+        self.srb_date = self.item[7]
+        self.day = self.srb_date[-2:]
+        self.month = self.srb_date[5:7]
+        self.year = self.srb_date[:4]
 
         # date frame
         self.date_frame = LabelFrame(self.window)
@@ -523,7 +535,7 @@ class DetailWindow(Window):
 
         # date item label
         self.date_item_label = Label(
-            self.date_frame, text=f'{day}.{month}.{year}.', width=22, anchor=CENTER)
+            self.date_frame, text=f'{self.day}.{self.month}.{self.year}.', width=22, anchor=CENTER)
         self.date_item_label.grid(row=0, column=1)
 
         # CITY
@@ -554,6 +566,15 @@ class DetailWindow(Window):
         self.back_button.grid(row=self.main_row_same, column=1,
                               pady=5)
 
+        # EDIT BUTTON
+        self.edit_button = Button(
+            self.window, text='EDIT', padx=21, command=self.edit)
+        self.edit_button.grid(row=self.main_row, column=0, pady=5)
+
+        # DELETE BUTTON
+        self.delete_button = Button(self.window, text='DELETE')
+        self.delete_button.grid(row=self.main_row_same, column=2)
+
         # binding escape
         self.window.bind('<Escape>', self.back)
 
@@ -564,7 +585,7 @@ class DetailWindow(Window):
         self.et.grid(row=self.main_row, column=0, columnspan=3)
 
     def back(self, *args):
-        return self.previous_window(self.window, self.previous_window, self.query)
+        return SearchWindow(self.window, MainWindow, self.query)
 
     def set_previous_button(self):
         if self.item_no == 0:
@@ -593,6 +614,717 @@ class DetailWindow(Window):
 
     def next_meth(self, *args):
         return DetailWindow(self.window, self.previous_window, self.item_no+1, self.query)
+
+    def edit(self, *args):
+        return UpdatePriceWindow(self.window, DetailWindow, self.item_no, self.query)
+
+
+# # # UPDATE PRICE # # #
+class UpdatePriceWindow(Window):
+    def __init__(self, window, previous_window, item_no, query):
+        super().__init__(window, previous_window)
+        self.item_no = item_no
+        self.item = query[item_no]
+        self.query = query
+
+        # PRODUCT NAME
+        # product name frame
+        self.product_name_frame = LabelFrame(window)
+        self.product_name_frame.grid(
+            row=self.main_row, column=0, columnspan=2, pady=5)
+
+        # product name label
+        self.product_name_label = Label(
+            self.product_name_frame, text='Product name:')
+        self.product_name_label.grid(row=0, column=0)
+
+        # product name entry
+        self.product_name_entry = Entry(self.product_name_frame, width=23)
+        self.product_name_entry.grid(row=0, column=1)
+        self.product_name_entry.insert(0, self.item[0])
+        self.product_name_entry.configure(state=DISABLED)
+
+        # PRODUCT TYPE
+        # product type frame
+        self.product_type_frame = LabelFrame(window)
+        self.product_type_frame.grid(
+            row=self.main_row, column=0, columnspan=2, pady=5)
+
+        # product type label
+        self.product_type_label = Label(
+            self.product_type_frame, text='Product type:')
+        self.product_type_label.grid(row=0, column=0)
+
+        # product type entry
+        self.product_type_entry = Entry(self.product_type_frame, width=24)
+        self.product_type_entry.grid(row=0, column=1)
+        self.product_type_entry.insert(0, self.item[1])
+        self.product_type_entry.configure(state=DISABLED)
+
+        # PRICE
+        # price frame
+        self.price_frame = LabelFrame(window)
+        self.price_frame.grid(row=self.main_row, column=0,
+                              columnspan=2, pady=5)
+
+        # price label
+        self.price_label = Label(self.price_frame, text='Price:')
+        self.price_label.grid(row=0, column=0)
+
+        # price entry
+        self.price_entry = Entry(self.price_frame, width=30)
+        self.price_entry.grid(row=0, column=1)
+        self.price_entry.insert(0, self.item[2])
+        self.price_entry.focus_set()
+
+        # CURRENCY AND UNIT
+        # currency and unit frame
+        self.currency_unit_frame = LabelFrame(window)
+        self.currency_unit_frame.grid(
+            row=self.main_row, column=0, columnspan=2, pady=5)
+
+        # currency label
+        self.currency_label = Label(self.currency_unit_frame, text='Currency:')
+        self.currency_label.grid(row=0, column=0)
+
+        # currency entry
+        self.currency_entry = Entry(self.currency_unit_frame, width=8)
+        self.currency_entry.grid(row=0, column=1)
+        self.currency_entry.insert(0, self.item[3])
+
+        # unit label
+        self.unit_label = Label(self.currency_unit_frame, text='Unit:')
+        self.unit_label.grid(row=0, column=2)
+
+        # unit entry
+        self.unit_entry = Entry(self.currency_unit_frame, width=14)
+        self.unit_entry.grid(row=0, column=3)
+        self.unit_entry.insert(0, self.item[4])
+
+        # LOCATION
+        # location frame
+        self.location_frame = LabelFrame(window)
+        self.location_frame.grid(
+            row=self.main_row, column=0, columnspan=2, pady=5)
+
+        # location name label
+        self.location_name_label = Label(
+            self.location_frame, text='Location name:')
+        self.location_name_label.grid(row=0, column=0)
+
+        # location name entry
+        self.location_name_entry = Entry(
+            self.location_frame, width=22)
+        self.location_name_entry.grid(row=0, column=1)
+        self.location_name_entry.insert(0, self.item[5])
+        self.location_name_entry.configure(state=DISABLED)
+
+        # general location frame
+        self.general_location_frame = LabelFrame(window)
+        self.general_location_frame.grid(
+            row=self.main_row, column=0, columnspan=2, pady=5)
+
+        # general location label
+        self.general_location_label = Label(
+            self.general_location_frame, text='General location:')
+        self.general_location_label.grid(row=0, column=2)
+
+        # general location entry
+        self.general_location_entry = Entry(
+            self.general_location_frame, width=21)
+        self.general_location_entry.grid(row=0, column=3)
+        self.general_location_entry.insert(0, self.item[6])
+        self.general_location_entry.configure(state=DISABLED)
+
+        # DATE
+        # date frame
+        self.date_frame = LabelFrame(window)
+        self.date_frame.grid(row=self.main_row, column=0, columnspan=2, pady=5)
+
+        # date label
+        self.location_name_label = Label(self.date_frame, text='Date:')
+        self.location_name_label.grid(row=0, column=0)
+
+        # date entry
+        self.date_today = date.today()
+        # day entry
+        self.day_entry = Entry(self.date_frame, width=3)
+        self.day_entry.grid(row=0, column=1)
+        self.day_entry.insert(0, str(self.date_today)[8:])
+        # month entry
+        self.month_entry = Entry(self.date_frame, width=3)
+        self.month_entry.grid(row=0, column=2)
+        self.month_entry.insert(0, str(self.date_today)[5:7])
+        # year entry
+        self.year_entry = Entry(self.date_frame, width=5)
+        self.year_entry.grid(row=0, column=3)
+        self.year_entry.insert(0, str(self.date_today)[:4])
+
+        # CITY
+        # city frame
+        self.city_frame = LabelFrame(window)
+        self.city_frame.grid(row=self.main_row, column=0, columnspan=2, pady=5)
+        # city label
+        self.city_label = Label(self.city_frame, text='City:')
+        self.city_label.grid(row=0, column=4)
+
+        # city entry
+        self.city_entry = Entry(self.city_frame, width=31)
+        self.city_entry.grid(row=0, column=5)
+        self.city_entry.insert(0, self.item[8])
+        self.city_entry.configure(state=DISABLED)
+
+        # CANCEL BUTTON
+        self.cancel_button = Button(window, text='CANCEL', command=self.cancel)
+        self.cancel_button.grid(row=self.main_row, column=0, pady=5)
+
+        # UPDATE BUTTON
+        self.update_execute_button = Button(
+            window, text='UPDATE', command=self.update_execute)
+        self.update_execute_button.grid(
+            row=self.main_row_same, column=1, pady=5)
+
+        # UPDATE PRODUCT BUTTON
+        self.update_product_button = Button(
+            self.window, text='EDIT PRODUCT', command=self.update_product)
+        self.update_product_button.grid(row=self.main_row, column=0)
+
+        # UPDATE LOCATION BUTTON
+        self.update_location_button = Button(
+            self.window, text='EDIT LOCATION', command=self.update_location)
+        self.update_location_button.grid(row=self.main_row_same, column=1)
+
+        # bind <Return> and <Escape>
+        self.window.bind('<Return>', self.update_execute)
+        self.window.bind('<Escape>', self.cancel)
+
+        # # # SIZE REFERENCE # # #
+        self.lbl = Label(window, text='020406081012141618202224262830323436')
+        self.lbl.grid(row=self.main_row, column=0, columnspan=2)
+        self.et = Entry(window, width=36)
+        self.et.grid(row=self.main_row, column=0, columnspan=2)
+
+    # update location
+    def update_location(self):
+        return UpdateLocationWindow(self.window, self.previous_window, self.item_no, self.query)
+
+    # update product
+    def update_product(self):
+        return UpdateProductWindow(self.window, self.previous_window, self.item_no, self.query)
+
+    def cancel(self, *args):
+        return self.previous_window(self.window, SearchWindow, self.item_no, self.query)
+
+    def update_execute(self, *args):
+        # initiating validation
+        if self.validate() is True:
+
+            # creating full date
+            submit_date = self.year_entry.get() + '-' + self.month_entry.get() + \
+                '-' + self.day_entry.get()
+
+            # submitting to database
+            update_price_db(
+                price=self.price_entry.get(),
+                currency=self.currency_entry.get(),
+                unit=self.unit_entry.get(),
+                price_date=submit_date,
+                product_id=self.item[9],
+                location_id=self.item[10]
+            )
+            # getting new query and item number
+            self.query = search_db(self.product_type_entry.get())
+            self.item_no = self.new_item_no
+
+            return self.previous_window(self.window, SearchWindow, self.item_no, self.query)
+
+    # getting new query
+    @property
+    def new_item_no(self):
+        count = 0
+        for item in self.query:
+            if item[9] == self.item[9] and item[10] == self.item[10]:
+                return count
+            count += 1
+
+    def validate(self):
+        # validating field length
+        if len(self.price_entry.get()) == 0 or len(self.price_entry.get()) > 9:
+            return self.warning()
+        elif len(self.currency_entry.get()) == 0:
+            return self.warning()
+        elif len(self.unit_entry.get()) == 0:
+            return self.warning()
+        elif len(self.day_entry.get()) == 0 or len(self.day_entry.get()) > 2:
+            return self.warning()
+        elif len(self.month_entry.get()) == 0 or len(self.day_entry.get()) > 2:
+            return self.warning()
+        elif len(self.year_entry.get()) == 0 or len(self.day_entry.get()) > 4:
+            return self.warning()
+
+        # validating numbers
+        try:
+            float(self.price_entry.get())
+            if int(self.day_entry.get()) > 31 or int(self.day_entry.get()) < 1 or int(self.month_entry.get()) > 12 or int(self.month_entry.get()) < 1:
+                return self.warning()
+        except ValueError:
+            return self.warning()
+        return True
+
+    # producing warning message
+    @staticmethod
+    def warning():
+        return messagebox.showwarning('Warning', 'Entered fields are not valid')
+
+
+# # # UPDATE PRODUCT # # #
+class UpdateProductWindow(Window):
+    def __init__(self, window, previous_window, item_no, query):
+        super().__init__(window, previous_window)
+        self.item_no = item_no
+        self.item = query[item_no]
+        self.query = query
+
+        # PRODUCT NAME
+        # product name frame
+        self.product_name_frame = LabelFrame(window)
+        self.product_name_frame.grid(
+            row=self.main_row, column=0, columnspan=2, pady=5)
+
+        # product name label
+        self.product_name_label = Label(
+            self.product_name_frame, text='Product name:')
+        self.product_name_label.grid(row=0, column=0)
+
+        # product name entry
+        self.product_name_entry = Entry(self.product_name_frame, width=23)
+        self.product_name_entry.grid(row=0, column=1)
+        self.product_name_entry.insert(0, self.item[0])
+        self.product_name_entry.focus_set()
+
+        # PRODUCT TYPE
+        # product type frame
+        self.product_type_frame = LabelFrame(window)
+        self.product_type_frame.grid(
+            row=self.main_row, column=0, columnspan=2, pady=5)
+
+        # product type label
+        self.product_type_label = Label(
+            self.product_type_frame, text='Product type:')
+        self.product_type_label.grid(row=0, column=0)
+
+        # product type entry
+        self.product_type_entry = Entry(self.product_type_frame, width=24)
+        self.product_type_entry.grid(row=0, column=1)
+        self.product_type_entry.insert(0, self.item[1])
+
+        # PRICE
+        # price frame
+        self.price_frame = LabelFrame(window)
+        self.price_frame.grid(row=self.main_row, column=0,
+                              columnspan=2, pady=5)
+
+        # price label
+        self.price_label = Label(self.price_frame, text='Price:')
+        self.price_label.grid(row=0, column=0)
+
+        # price entry
+        self.price_entry = Entry(self.price_frame, width=30)
+        self.price_entry.grid(row=0, column=1)
+        self.price_entry.insert(0, self.item[2])
+        self.price_entry.configure(state=DISABLED)
+
+        # CURRENCY AND UNIT
+        # currency and unit frame
+        self.currency_unit_frame = LabelFrame(window)
+        self.currency_unit_frame.grid(
+            row=self.main_row, column=0, columnspan=2, pady=5)
+
+        # currency label
+        self.currency_label = Label(self.currency_unit_frame, text='Currency:')
+        self.currency_label.grid(row=0, column=0)
+
+        # currency entry
+        self.currency_entry = Entry(self.currency_unit_frame, width=8)
+        self.currency_entry.grid(row=0, column=1)
+        self.currency_entry.insert(0, self.item[3])
+        self.currency_entry.configure(state=DISABLED)
+
+        # unit label
+        self.unit_label = Label(self.currency_unit_frame, text='Unit:')
+        self.unit_label.grid(row=0, column=2)
+
+        # unit entry
+        self.unit_entry = Entry(self.currency_unit_frame, width=14)
+        self.unit_entry.grid(row=0, column=3)
+        self.unit_entry.insert(0, self.item[4])
+        self.unit_entry.configure(state=DISABLED)
+
+        # LOCATION
+        # location frame
+        self.location_frame = LabelFrame(window)
+        self.location_frame.grid(
+            row=self.main_row, column=0, columnspan=2, pady=5)
+
+        # location name label
+        self.location_name_label = Label(
+            self.location_frame, text='Location name:')
+        self.location_name_label.grid(row=0, column=0)
+
+        # location name entry
+        self.location_name_entry = Entry(
+            self.location_frame, width=22)
+        self.location_name_entry.grid(row=0, column=1)
+        self.location_name_entry.insert(0, self.item[5])
+        self.location_name_entry.configure(state=DISABLED)
+
+        # general location frame
+        self.general_location_frame = LabelFrame(window)
+        self.general_location_frame.grid(
+            row=self.main_row, column=0, columnspan=2, pady=5)
+
+        # general location label
+        self.general_location_label = Label(
+            self.general_location_frame, text='General location:')
+        self.general_location_label.grid(row=0, column=2)
+
+        # general location entry
+        self.general_location_entry = Entry(
+            self.general_location_frame, width=21)
+        self.general_location_entry.grid(row=0, column=3)
+        self.general_location_entry.insert(0, self.item[6])
+        self.general_location_entry.configure(state=DISABLED)
+
+        # DATE
+        # date frame
+        self.date_frame = LabelFrame(window)
+        self.date_frame.grid(row=self.main_row, column=0, columnspan=2, pady=5)
+
+        # date label
+        self.location_name_label = Label(self.date_frame, text='Date:')
+        self.location_name_label.grid(row=0, column=0)
+
+        # date entry
+        self.date_today = date.today()
+        # day entry
+        self.day_entry = Entry(self.date_frame, width=3)
+        self.day_entry.grid(row=0, column=1)
+        self.day_entry.insert(0, str(self.date_today)[8:])
+        self.day_entry.configure(state=DISABLED)
+
+        # month entry
+        self.month_entry = Entry(self.date_frame, width=3)
+        self.month_entry.grid(row=0, column=2)
+        self.month_entry.insert(0, str(self.date_today)[5:7])
+        self.month_entry.configure(state=DISABLED)
+
+        # year entry
+        self.year_entry = Entry(self.date_frame, width=5)
+        self.year_entry.grid(row=0, column=3)
+        self.year_entry.insert(0, str(self.date_today)[:4])
+        self.year_entry.configure(state=DISABLED)
+
+        # CITY
+        # city frame
+        self.city_frame = LabelFrame(window)
+        self.city_frame.grid(row=self.main_row, column=0, columnspan=2, pady=5)
+        # city label
+        self.city_label = Label(self.city_frame, text='City:')
+        self.city_label.grid(row=0, column=4)
+
+        # city entry
+        self.city_entry = Entry(self.city_frame, width=31)
+        self.city_entry.grid(row=0, column=5)
+        self.city_entry.insert(0, self.item[8])
+        self.city_entry.configure(state=DISABLED)
+
+        # CANCEL BUTTON
+        self.cancel_button = Button(window, text='CANCEL', command=self.cancel)
+        self.cancel_button.grid(row=self.main_row, column=0, pady=5)
+
+        # UPDATE BUTTON
+        self.update_execute_button = Button(
+            window, text='UPDATE', command=self.update_execute)
+        self.update_execute_button.grid(
+            row=self.main_row_same, column=1, pady=5)
+
+        # bind <Return> and <Escape>
+        self.window.bind('<Return>', self.update_execute)
+        self.window.bind('<Escape>', self.cancel)
+
+        # # # SIZE REFERENCE # # #
+        self.lbl = Label(window, text='020406081012141618202224262830323436')
+        self.lbl.grid(row=self.main_row, column=0, columnspan=2)
+        self.et = Entry(window, width=36)
+        self.et.grid(row=self.main_row, column=0, columnspan=2)
+
+    def cancel(self, *args):
+        return self.previous_window(self.window, SearchWindow, self.item_no, self.query)
+
+    def update_execute(self, *args):
+        # initiating validation
+        if self.validate() is True:
+
+            # submitting to database
+            update_product_db(
+                product_name=self.product_name_entry.get(),
+                product_type=self.product_type_entry.get(),
+                product_id=self.item[9]
+            )
+            # getting new query and item number
+            self.query = search_db(self.product_type_entry.get())
+            self.item_no = self.new_item_no
+
+            return self.previous_window(self.window, SearchWindow, self.item_no, self.query)
+
+    # getting new query
+    @property
+    def new_item_no(self):
+        count = 0
+        for item in self.query:
+            if item[9] == self.item[9] and item[10] == self.item[10]:
+                return count
+            count += 1
+
+    def validate(self):
+        # validating field length
+        if len(self.product_name_entry.get()) == 0:
+            return self.warning()
+        elif len(self.product_type_entry.get()) == 0:
+            return self.warning()
+
+        return True
+
+    # producing warning message
+    @staticmethod
+    def warning():
+        return messagebox.showwarning('Warning', 'Entered fields are not valid')
+
+
+# # # -------------------- UPDATE LOCATION -------------------- # # #
+class UpdateLocationWindow(Window):
+    def __init__(self, window, previous_window, item_no, query):
+        super().__init__(window, previous_window)
+        self.item_no = item_no
+        self.item = query[item_no]
+        self.query = query
+
+        # PRODUCT NAME
+        # product name frame
+        self.product_name_frame = LabelFrame(window)
+        self.product_name_frame.grid(
+            row=self.main_row, column=0, columnspan=2, pady=5)
+
+        # product name label
+        self.product_name_label = Label(
+            self.product_name_frame, text='Product name:')
+        self.product_name_label.grid(row=0, column=0)
+
+        # product name entry
+        self.product_name_entry = Entry(self.product_name_frame, width=23)
+        self.product_name_entry.grid(row=0, column=1)
+        self.product_name_entry.insert(0, self.item[0])
+        self.product_name_entry.configure(state=DISABLED)
+
+        # PRODUCT TYPE
+        # product type frame
+        self.product_type_frame = LabelFrame(window)
+        self.product_type_frame.grid(
+            row=self.main_row, column=0, columnspan=2, pady=5)
+
+        # product type label
+        self.product_type_label = Label(
+            self.product_type_frame, text='Product type:')
+        self.product_type_label.grid(row=0, column=0)
+
+        # product type entry
+        self.product_type_entry = Entry(self.product_type_frame, width=24)
+        self.product_type_entry.grid(row=0, column=1)
+        self.product_type_entry.insert(0, self.item[1])
+        self.product_type_entry.configure(state=DISABLED)
+
+        # PRICE
+        # price frame
+        self.price_frame = LabelFrame(window)
+        self.price_frame.grid(row=self.main_row, column=0,
+                              columnspan=2, pady=5)
+
+        # price label
+        self.price_label = Label(self.price_frame, text='Price:')
+        self.price_label.grid(row=0, column=0)
+
+        # price entry
+        self.price_entry = Entry(self.price_frame, width=30)
+        self.price_entry.grid(row=0, column=1)
+        self.price_entry.insert(0, self.item[2])
+        self.price_entry.configure(state=DISABLED)
+
+        # CURRENCY AND UNIT
+        # currency and unit frame
+        self.currency_unit_frame = LabelFrame(window)
+        self.currency_unit_frame.grid(
+            row=self.main_row, column=0, columnspan=2, pady=5)
+
+        # currency label
+        self.currency_label = Label(self.currency_unit_frame, text='Currency:')
+        self.currency_label.grid(row=0, column=0)
+
+        # currency entry
+        self.currency_entry = Entry(self.currency_unit_frame, width=8)
+        self.currency_entry.grid(row=0, column=1)
+        self.currency_entry.insert(0, self.item[3])
+        self.currency_entry.configure(state=DISABLED)
+
+        # unit label
+        self.unit_label = Label(self.currency_unit_frame, text='Unit:')
+        self.unit_label.grid(row=0, column=2)
+
+        # unit entry
+        self.unit_entry = Entry(self.currency_unit_frame, width=14)
+        self.unit_entry.grid(row=0, column=3)
+        self.unit_entry.insert(0, self.item[4])
+        self.unit_entry.configure(state=DISABLED)
+
+        # LOCATION
+        # location frame
+        self.location_frame = LabelFrame(window)
+        self.location_frame.grid(
+            row=self.main_row, column=0, columnspan=2, pady=5)
+
+        # location name label
+        self.location_name_label = Label(
+            self.location_frame, text='Location name:')
+        self.location_name_label.grid(row=0, column=0)
+
+        # location name entry
+        self.location_name_entry = Entry(
+            self.location_frame, width=22)
+        self.location_name_entry.grid(row=0, column=1)
+        self.location_name_entry.insert(0, self.item[5])
+        self.location_name_entry.focus_set()
+
+        # general location frame
+        self.general_location_frame = LabelFrame(window)
+        self.general_location_frame.grid(
+            row=self.main_row, column=0, columnspan=2, pady=5)
+
+        # general location label
+        self.general_location_label = Label(
+            self.general_location_frame, text='General location:')
+        self.general_location_label.grid(row=0, column=2)
+
+        # general location entry
+        self.general_location_entry = Entry(
+            self.general_location_frame, width=21)
+        self.general_location_entry.grid(row=0, column=3)
+        self.general_location_entry.insert(0, self.item[6])
+
+        # DATE
+        # date frame
+        self.date_frame = LabelFrame(window)
+        self.date_frame.grid(row=self.main_row, column=0, columnspan=2, pady=5)
+
+        # date label
+        self.location_name_label = Label(self.date_frame, text='Date:')
+        self.location_name_label.grid(row=0, column=0)
+
+        # date entry
+        self.date_today = date.today()
+        # day entry
+        self.day_entry = Entry(self.date_frame, width=3)
+        self.day_entry.grid(row=0, column=1)
+        self.day_entry.insert(0, str(self.date_today)[8:])
+        self.day_entry.configure(state=DISABLED)
+
+        # month entry
+        self.month_entry = Entry(self.date_frame, width=3)
+        self.month_entry.grid(row=0, column=2)
+        self.month_entry.insert(0, str(self.date_today)[5:7])
+        self.month_entry.configure(state=DISABLED)
+
+        # year entry
+        self.year_entry = Entry(self.date_frame, width=5)
+        self.year_entry.grid(row=0, column=3)
+        self.year_entry.insert(0, str(self.date_today)[:4])
+        self.year_entry.configure(state=DISABLED)
+
+        # CITY
+        # city frame
+        self.city_frame = LabelFrame(window)
+        self.city_frame.grid(row=self.main_row, column=0, columnspan=2, pady=5)
+        # city label
+        self.city_label = Label(self.city_frame, text='City:')
+        self.city_label.grid(row=0, column=4)
+
+        # city entry
+        self.city_entry = Entry(self.city_frame, width=31)
+        self.city_entry.grid(row=0, column=5)
+        self.city_entry.insert(0, self.item[8])
+
+        # CANCEL BUTTON
+        self.cancel_button = Button(window, text='CANCEL', command=self.cancel)
+        self.cancel_button.grid(row=self.main_row, column=0, pady=5)
+
+        # UPDATE BUTTON
+        self.update_execute_button = Button(
+            window, text='UPDATE', command=self.update_execute)
+        self.update_execute_button.grid(
+            row=self.main_row_same, column=1, pady=5)
+
+        # bind <Return> and <Escape>
+        self.window.bind('<Return>', self.update_execute)
+        self.window.bind('<Escape>', self.cancel)
+
+        # # # SIZE REFERENCE # # #
+        self.lbl = Label(window, text='020406081012141618202224262830323436')
+        self.lbl.grid(row=self.main_row, column=0, columnspan=2)
+        self.et = Entry(window, width=36)
+        self.et.grid(row=self.main_row, column=0, columnspan=2)
+
+    def cancel(self, *args):
+        return self.previous_window(self.window, SearchWindow, self.item_no, self.query)
+
+    def update_execute(self, *args):
+        # initiating validation
+        if self.validate() is True:
+
+            # submitting to database
+            update_location_db(
+                location_name=self.location_name_entry.get(),
+                city=self.city_entry.get(),
+                general_location=self.general_location_entry.get(),
+                location_id=self.item[10]
+            )
+            # getting new query and item number
+            self.query = search_db(self.product_type_entry.get())
+            self.item_no = self.new_item_no
+
+            return self.previous_window(self.window, SearchWindow, self.item_no, self.query)
+
+    # getting new query
+    @property
+    def new_item_no(self):
+        count = 0
+        for item in self.query:
+            if item[9] == self.item[9] and item[10] == self.item[10]:
+                return count
+            count += 1
+
+    def validate(self):
+        # validating field length
+        if len(self.location_name_entry.get()) == 0:
+            return self.warning()
+        elif len(self.general_location_entry.get()) == 0:
+            return self.warning()
+        elif len(self.city_entry.get()) == 0:
+            return self.warning()
+
+        return True
+
+    # producing warning message
+    @staticmethod
+    def warning():
+        return messagebox.showwarning('Warning', 'Entered fields are not valid')
 
 
 if __name__ == '__main__':
