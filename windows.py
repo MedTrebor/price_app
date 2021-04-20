@@ -17,6 +17,8 @@ class Window:
         self.window.unbind('<Button-5>')
         self.window.unbind('<Return>')
         self.window.unbind('<Escape>')
+        self.window.unbind('<Left>')
+        self.window.unbind('<Right>')
 
     @property
     def main_row(self):
@@ -67,7 +69,6 @@ class CreateNewWindow(Window):
     def __init__(self, window, previous_window, **kwargs):
         super().__init__(window, previous_window)
         self.query = kwargs.get('query')
-        print(self.query)
 
         # PRODUCT NAME
         # product name frame
@@ -361,6 +362,7 @@ class SearchWindow(Window):
             return DetailWindow(window, SearchWindow, saving_item, saving_query)
         return inner
 
+    # open SearchWindow
     def search(self, *args):
         entry = search_db(self.search_entry.get())
         if entry != []:
@@ -378,13 +380,16 @@ class SearchWindow(Window):
                 row=row_count, column=0, rowspan=3)
             Label(self.canvas_frame, text=item[0]).grid(
                 row=row_count, column=1, pady=5)
-            Label(self.canvas_frame, text=f'{item[2]} {item[3]}').grid(
+            Label(self.canvas_frame, text=f'{item[2]:.2f} {item[3]}/{item[4]}').grid(
                 row=row_count, column=2, pady=5)
             row_count += 1
 
             Label(self.canvas_frame, text=item[5]).grid(
                 row=row_count, column=1)
-            Label(self.canvas_frame, text=item[7]).grid(
+            day = item[7][-2:]
+            month = item[7][5:7]
+            year = item[7][:4]
+            Label(self.canvas_frame, text=f'{day}.{month}.{year}.').grid(
                 row=row_count, column=2, pady=5)
             row_count += 1
 
@@ -501,6 +506,11 @@ class DetailWindow(Window):
         self.general_location_item_label.grid(row=0, column=1)
 
         # DATE
+        srb_date = self.item[7]
+        day = srb_date[-2:]
+        month = srb_date[5:7]
+        year = srb_date[:4]
+
         # date frame
         self.date_frame = LabelFrame(self.window)
         self.date_frame.grid(
@@ -513,7 +523,7 @@ class DetailWindow(Window):
 
         # date item label
         self.date_item_label = Label(
-            self.date_frame, text=self.item[7], width=22, anchor=CENTER)
+            self.date_frame, text=f'{day}.{month}.{year}.', width=22, anchor=CENTER)
         self.date_item_label.grid(row=0, column=1)
 
         # CITY
@@ -544,13 +554,16 @@ class DetailWindow(Window):
         self.back_button.grid(row=self.main_row_same, column=1,
                               pady=5)
 
+        # binding escape
+        self.window.bind('<Escape>', self.back)
+
         # # # SIZE REFERENCE # # #
         self.lbl = Label(window, text='0204060810121416182022242628303234367')
         self.lbl.grid(row=self.main_row, column=0, columnspan=3)
         self.et = Entry(window, width=38)
         self.et.grid(row=self.main_row, column=0, columnspan=3)
 
-    def back(self):
+    def back(self, *args):
         return self.previous_window(self.window, self.previous_window, self.query)
 
     def set_previous_button(self):
@@ -561,6 +574,8 @@ class DetailWindow(Window):
             previous_button = Button(
                 self.window, text='<<', command=self.previous)
             previous_button.grid(row=self.main_row, column=0)
+            # binding left
+            self.window.bind('<Left>', self.previous)
 
     def set_next_button(self):
         if self.item_no + 1 == len(self.query):
@@ -570,11 +585,13 @@ class DetailWindow(Window):
             next_button = Button(self.window, text='>>',
                                  command=self.next_meth)
             next_button.grid(row=self.main_row_same, column=2)
+            # binding right
+            self.window.bind('<Right>', self.next_meth)
 
-    def previous(self):
+    def previous(self, *args):
         return DetailWindow(self.window, self.previous_window, self.item_no-1, self.query)
 
-    def next_meth(self):
+    def next_meth(self, *args):
         return DetailWindow(self.window, self.previous_window, self.item_no+1, self.query)
 
 
