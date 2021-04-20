@@ -12,6 +12,10 @@ class Window:
         for wgt in window.grid_slaves():
             wgt.destroy()
 
+        # unbinding scroll
+        self.window.unbind('<Button-4>')
+        self.window.unbind('<Button-5>')
+
     @property
     def main_row(self):
         self.main_row_count += 1
@@ -50,12 +54,18 @@ class MainWindow(Window):
         return CreateNewWindow(self.window, MainWindow)
 
     def search(self, *args):
-        return SearchWindow(self.window, MainWindow, search_db(self.search_entry.get()))
+        entry = self.search_entry.get()
+        if entry != '':
+            return SearchWindow(self.window, MainWindow, search_db(entry))
+        else:
+            return MainWindow(self.window, MainWindow)
 
 
 class CreateNewWindow(Window):
-    def __init__(self, window, previous_window):
+    def __init__(self, window, previous_window, **kwargs):
         super().__init__(window, previous_window)
+        self.query = kwargs.get('query')
+        print(self.query)
 
         # PRODUCT NAME
         # product name frame
@@ -208,7 +218,7 @@ class CreateNewWindow(Window):
         self.et.grid(row=self.main_row, column=0, columnspan=2)
 
     def cancel(self):
-        return self.previous_window(self.window, self.previous_window)
+        return self.previous_window(self.window, self.previous_window, self.query)
 
     def create_execute(self):
         # initiating validation
@@ -259,7 +269,7 @@ class CreateNewWindow(Window):
         # validating numbers
         try:
             float(self.price_entry.get())
-            if int(self.day_entry.get()) > 31 or int(self.month_entry.get()) > 12:
+            if int(self.day_entry.get()) > 31 or int(self.day_entry.get()) < 1 or int(self.month_entry.get()) > 12 or int(self.month_entry.get()) < 1:
                 return self.warning()
         except ValueError:
             return self.warning()
@@ -276,20 +286,28 @@ class SearchWindow(Window):
         super().__init__(window, previous_window)
         self.query = query
 
-        # search bar
+        # SEARCH BAR
+        # search frame
         self.search_frame = LabelFrame(window)
         self.search_frame.grid(
             row=self.main_row, column=0, pady=5, columnspan=2)
+        # search label
         self.search_label = Label(self.search_frame, text='Search:')
         self.search_label.grid(row=0, column=0)
+        # search entry
         self.search_entry = Entry(self.search_frame, width=21)
         self.search_entry.grid(row=0, column=1)
         self.search_entry.focus_set()
         self.search_entry.bind('<Return>', self.search)
-        self.search_entry.insert(0, self.query[0][1])
+        # search button
         self.search_button = Button(
             self.search_frame, text='SEARCH', command=self.search)
         self.search_button.grid(row=0, column=2)
+        # inserting query in search entry
+        try:
+            self.search_entry.insert(0, self.query[0][1])
+        except IndexError:
+            pass
 
         # canvas
         self.canvas = Canvas(self.window, width=290, height=500)
@@ -308,8 +326,8 @@ class SearchWindow(Window):
         self.populate()
 
         # setting scroll
-        self.window.bind_all('<Button-4>', self.mouse_scroll)
-        self.window.bind_all('<Button-5>', self.mouse_scroll)
+        self.window.bind('<Button-4>', self.mouse_scroll)
+        self.window.bind('<Button-5>', self.mouse_scroll)
 
         # create button
         self.create_new_button = Button(
@@ -324,7 +342,7 @@ class SearchWindow(Window):
         self.et.grid(row=self.main_row, column=0, columnspan=2)
 
     def create_new_func(self):
-        return CreateNewWindow(self.window, MainWindow)
+        return CreateNewWindow(self.window, SearchWindow, query=self.query)
 
     # open DetailWindow
     def open_details(self, item, query):
@@ -337,7 +355,11 @@ class SearchWindow(Window):
         return inner
 
     def search(self, *args):
-        return SearchWindow(self.window, MainWindow, search_db(self.search_entry.get()))
+        entry = search_db(self.search_entry.get())
+        if entry != []:
+            return SearchWindow(self.window, MainWindow, entry)
+        else:
+            return MainWindow(self.window, MainWindow)
 
     # SEARCHED CONTENT
     def populate(self):
