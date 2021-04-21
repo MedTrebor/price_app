@@ -1151,8 +1151,10 @@ class UpdateProductWindow(Window):
         self.city_entry.configure(state=DISABLED)
 
         # ROTATE LEFT BUTTON
-        self.rotate_left_button = Button(
-            self.window, text='ROTATE L', command=self.rotate_left)
+        self.rotate_left_button = Button(self.window, command=self.rotate_left)
+        self.rotate_left_button.img = ImageTk.PhotoImage(
+            file='./icons/rotate-left.png')
+        self.rotate_left_button.configure(image=self.rotate_left_button.img)
         self.rotate_left_button.grid(row=self.main_row, column=0)
 
         # UPLOAD BUTTON
@@ -1162,7 +1164,10 @@ class UpdateProductWindow(Window):
 
         # ROTATE RIGHT BUTTON
         self.rotate_right_button = Button(
-            self.window, text='ROTATE R', command=self.rotate_right)
+            self.window, command=self.rotate_right)
+        self.rotate_right_button.img = ImageTk.PhotoImage(
+            file='./icons/rotate-right.png')
+        self.rotate_right_button.configure(image=self.rotate_right_button.img)
         self.rotate_right_button.grid(row=self.main_row_same, column=2)
 
         if self.item[11] is None:
