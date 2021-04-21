@@ -165,17 +165,47 @@ def search_db(search_phrase):
 	        WHERE prices.product_id IN (
 		        SELECT products.product_id
 		        FROM products
-		        WHERE product_type = :product_type
+		        WHERE product_type LIKE :product_type
 	        )
         )
-        AND products.product_type = :product_type
+        AND products.product_type LIKE :product_type
         ORDER BY prices.price DESC;
         """,
         {
-            'product_type': search_phrase
+            'product_type': '%' + search_phrase + '%'
         }
     )
-    return cur.fetchall()
+    query = cur.fetchall()
+    if query == []:
+        cur.execute(
+            """
+        SELECT products.product_name, products.product_type,
+            prices.price, prices.currency, prices.unit, locations.location_name,
+            locations.general_location, prices.price_date, locations.city,  
+            prices.product_id, prices.location_id  
+        FROM locations
+        JOIN prices
+        ON locations.location_id = prices.location_id
+        JOIN products
+        ON prices.product_id = products.product_id
+        WHERE locations.location_id IN (
+	        SELECT prices.location_id
+	        FROM prices
+	        WHERE prices.product_id IN (
+		        SELECT products.product_id
+		        FROM products
+		        WHERE product_name LIKE :product_name
+	        )
+        )
+        AND products.product_name LIKE :product_name
+        ORDER BY prices.price DESC;
+            """,
+            {
+                'product_name': '%' + search_phrase + '%'
+            }
+        )
+        query = cur.fetchall()
+    return query
 
 
 # UPDATE PRICE

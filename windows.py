@@ -50,7 +50,7 @@ class MainWindow(Window):
         self.search_frame.grid(row=self.main_row, column=0, pady=5)
         self.search_label = Label(self.search_frame, text='Search:')
         self.search_label.grid(row=0, column=0)
-        self.search_entry = Entry(self.search_frame, width=19)
+        self.search_entry = Entry(self.search_frame, width=21)
         self.search_entry.focus_set()
         self.search_entry.bind('<Return>', self.search)
         self.search_entry.grid(row=0, column=1)
@@ -63,13 +63,20 @@ class MainWindow(Window):
         self.create_new_button.grid(
             row=self.main_row, column=0, padx=30, pady=5)
 
+        # # # SIZE REFERENCE # # #
+        self.lbl = Label(window, text='0204060810121416182022242628303234367')
+        self.lbl.grid(row=self.main_row, column=0)
+        self.et = Entry(window, width=38)
+        self.et.grid(row=self.main_row, column=0)
+
     def create_new_func(self):
         return CreateNewWindow(self.window, MainWindow)
 
     def search(self, *args):
-        entry = search_db(self.search_entry.get())
-        if entry != []:
-            return SearchWindow(self.window, MainWindow, entry)
+        search_phrase = self.search_entry.get()
+        query = search_db(search_phrase)
+        if query != []:
+            return SearchWindow(self.window, MainWindow, query, search_phrase)
         else:
             return MainWindow(self.window, MainWindow)
 
@@ -78,7 +85,8 @@ class MainWindow(Window):
 class CreateNewWindow(Window):
     def __init__(self, window, previous_window, **kwargs):
         super().__init__(window, previous_window)
-        self.query = kwargs.get('query', [('none', 'none')])
+        self.query = kwargs.get('query')
+        self.search_phrase = kwargs.get('search_phrase', 'qwerty')
 
         # PRODUCT NAME
         # product name frame
@@ -236,8 +244,11 @@ class CreateNewWindow(Window):
         self.et.grid(row=self.main_row, column=0, columnspan=2)
 
     def cancel(self, *args):
-        query = search_db(self.query[0][1])
-        return self.previous_window(self.window, self.previous_window, query)
+        query = search_db(self.search_phrase)
+        if query == []:
+            return MainWindow(self.window, MainWindow)
+        else:
+            return self.previous_window(self.window, self.previous_window, query, self.search_phrase)
 
     def create_execute(self, *args):
         # initiating validation
@@ -259,8 +270,8 @@ class CreateNewWindow(Window):
                 unit=self.unit_entry.get(),
                 date=submit_date
             )
-            query = search_db(self.query[0][1])
-            CreateNewWindow(self.window, self.previous_window, query=query)
+            query = search_db(self.search_phrase)
+            # CreateNewWindow(self.window, self.previous_window, query=query)
 
     def validate(self):
         # validating field length
@@ -304,9 +315,10 @@ class CreateNewWindow(Window):
 
 # # # SEARCH WINDOW # # #
 class SearchWindow(Window):
-    def __init__(self, window, previous_window, query, *args):
+    def __init__(self, window, previous_window, query, search_phrase, *args):
         super().__init__(window, previous_window)
         self.query = query
+        self.search_phrase = search_phrase
 
         # SEARCH BAR
         # search frame
@@ -326,10 +338,7 @@ class SearchWindow(Window):
             self.search_frame, text='SEARCH', command=self.search)
         self.search_button.grid(row=0, column=2)
         # inserting query in search entry
-        try:
-            self.search_entry.insert(0, self.query[0][1])
-        except IndexError:
-            pass
+        self.search_entry.insert(0, self.search_phrase)
 
         # canvas
         self.canvas = Canvas(self.window, width=290, height=500)
@@ -364,23 +373,30 @@ class SearchWindow(Window):
         self.et.grid(row=self.main_row, column=0, columnspan=2)
 
     def create_new_func(self):
-        return CreateNewWindow(self.window, SearchWindow, query=self.query)
+        return CreateNewWindow(
+            self.window,
+            SearchWindow,
+            query=self.query,
+            search_phrase=self.search_phrase
+        )
 
     # open DetailWindow
     def open_details(self, item, query):
         saving_item = item
         saving_query = query
         window = self.window
+        search_phrase = self.search_phrase
 
         def inner():
-            return DetailWindow(window, SearchWindow, saving_item, saving_query)
+            return DetailWindow(window, SearchWindow, saving_item, saving_query, search_phrase)
         return inner
 
     # open SearchWindow
     def search(self, *args):
-        entry = search_db(self.search_entry.get())
-        if entry != []:
-            return SearchWindow(self.window, MainWindow, entry)
+        search_phrase = self.search_entry.get()
+        query = search_db(search_phrase)
+        if query != []:
+            return SearchWindow(self.window, MainWindow, query, search_phrase)
         else:
             return MainWindow(self.window, MainWindow)
 
@@ -436,11 +452,12 @@ class SearchWindow(Window):
 
 # # # DETAIL WINDOW # # #
 class DetailWindow(Window):
-    def __init__(self, window, previous_window, item_no, query):
+    def __init__(self, window, previous_window, item_no, query, search_phrase):
         super().__init__(window, previous_window)
         self.item_no = item_no
         self.item = query[item_no]
         self.query = query
+        self.search_phrase = search_phrase
 
         # PRODUCT NAME
         # product name frame
@@ -589,7 +606,7 @@ class DetailWindow(Window):
         self.et.grid(row=self.main_row, column=0, columnspan=3)
 
     def back(self, *args):
-        return SearchWindow(self.window, MainWindow, self.query)
+        return SearchWindow(self.window, MainWindow, self.query, self.search_phrase)
 
     def set_previous_button(self):
         if self.item_no == 0:
@@ -614,30 +631,34 @@ class DetailWindow(Window):
             self.window.bind('<Right>', self.next_meth)
 
     def previous(self, *args):
-        return DetailWindow(self.window, self.previous_window, self.item_no-1, self.query)
+        return DetailWindow(self.window, self.previous_window, self.item_no-1, self.query, self.search_phrase)
 
     def next_meth(self, *args):
-        return DetailWindow(self.window, self.previous_window, self.item_no+1, self.query)
+        return DetailWindow(self.window, self.previous_window, self.item_no+1, self.query, self.search_phrase)
 
     def edit(self, *args):
-        return UpdatePriceWindow(self.window, DetailWindow, self.item_no, self.query)
+        return UpdatePriceWindow(self.window, DetailWindow, self.item_no, self.query, self.search_phrase)
 
     def delete(self):
-        delete_db(
-            product_id=self.item[9],
-            location_id=self.item[10]
-        )
-        query = search_db(self.item[1])
-        return self.previous_window(self.window, MainWindow, query)
+        response = messagebox.askyesno(
+            'DELETE', 'Are you sure you want to delete entry?')
+        if response == 1:
+            delete_db(
+                product_id=self.item[9],
+                location_id=self.item[10]
+            )
+            query = search_db(self.search_phrase)
+            return self.previous_window(self.window, MainWindow, query, self.search_phrase)
 
 
 # # # UPDATE PRICE # # #
 class UpdatePriceWindow(Window):
-    def __init__(self, window, previous_window, item_no, query):
+    def __init__(self, window, previous_window, item_no, query, search_phrase):
         super().__init__(window, previous_window)
         self.item_no = item_no
         self.item = query[item_no]
         self.query = query
+        self.search_phrase = search_phrase
 
         # PRODUCT NAME
         # product name frame
@@ -651,7 +672,7 @@ class UpdatePriceWindow(Window):
         self.product_name_label.grid(row=0, column=0)
 
         # product name entry
-        self.product_name_entry = Entry(self.product_name_frame, width=23)
+        self.product_name_entry = Entry(self.product_name_frame, width=25)
         self.product_name_entry.grid(row=0, column=1)
         self.product_name_entry.insert(0, self.item[0])
         self.product_name_entry.configure(state=DISABLED)
@@ -668,7 +689,7 @@ class UpdatePriceWindow(Window):
         self.product_type_label.grid(row=0, column=0)
 
         # product type entry
-        self.product_type_entry = Entry(self.product_type_frame, width=24)
+        self.product_type_entry = Entry(self.product_type_frame, width=26)
         self.product_type_entry.grid(row=0, column=1)
         self.product_type_entry.insert(0, self.item[1])
         self.product_type_entry.configure(state=DISABLED)
@@ -684,7 +705,7 @@ class UpdatePriceWindow(Window):
         self.price_label.grid(row=0, column=0)
 
         # price entry
-        self.price_entry = Entry(self.price_frame, width=30)
+        self.price_entry = Entry(self.price_frame, width=32)
         self.price_entry.grid(row=0, column=1)
         self.price_entry.insert(0, self.item[2])
         self.price_entry.focus_set()
@@ -700,7 +721,7 @@ class UpdatePriceWindow(Window):
         self.currency_label.grid(row=0, column=0)
 
         # currency entry
-        self.currency_entry = Entry(self.currency_unit_frame, width=8)
+        self.currency_entry = Entry(self.currency_unit_frame, width=9)
         self.currency_entry.grid(row=0, column=1)
         self.currency_entry.insert(0, self.item[3])
 
@@ -709,7 +730,7 @@ class UpdatePriceWindow(Window):
         self.unit_label.grid(row=0, column=2)
 
         # unit entry
-        self.unit_entry = Entry(self.currency_unit_frame, width=14)
+        self.unit_entry = Entry(self.currency_unit_frame, width=15)
         self.unit_entry.grid(row=0, column=3)
         self.unit_entry.insert(0, self.item[4])
 
@@ -726,7 +747,7 @@ class UpdatePriceWindow(Window):
 
         # location name entry
         self.location_name_entry = Entry(
-            self.location_frame, width=22)
+            self.location_frame, width=25)
         self.location_name_entry.grid(row=0, column=1)
         self.location_name_entry.insert(0, self.item[5])
         self.location_name_entry.configure(state=DISABLED)
@@ -743,7 +764,7 @@ class UpdatePriceWindow(Window):
 
         # general location entry
         self.general_location_entry = Entry(
-            self.general_location_frame, width=21)
+            self.general_location_frame, width=23)
         self.general_location_entry.grid(row=0, column=3)
         self.general_location_entry.insert(0, self.item[6])
         self.general_location_entry.configure(state=DISABLED)
@@ -781,7 +802,7 @@ class UpdatePriceWindow(Window):
         self.city_label.grid(row=0, column=4)
 
         # city entry
-        self.city_entry = Entry(self.city_frame, width=31)
+        self.city_entry = Entry(self.city_frame, width=33)
         self.city_entry.grid(row=0, column=5)
         self.city_entry.insert(0, self.item[8])
         self.city_entry.configure(state=DISABLED)
@@ -811,21 +832,21 @@ class UpdatePriceWindow(Window):
         self.window.bind('<Escape>', self.cancel)
 
         # # # SIZE REFERENCE # # #
-        self.lbl = Label(window, text='020406081012141618202224262830323436')
+        self.lbl = Label(window, text='02040608101214161820222426283032343637')
         self.lbl.grid(row=self.main_row, column=0, columnspan=2)
-        self.et = Entry(window, width=36)
+        self.et = Entry(window, width=38)
         self.et.grid(row=self.main_row, column=0, columnspan=2)
 
     # update location
     def update_location(self):
-        return UpdateLocationWindow(self.window, self.previous_window, self.item_no, self.query)
+        return UpdateLocationWindow(self.window, self.previous_window, self.item_no, self.query, self.search_phrase)
 
     # update product
     def update_product(self):
-        return UpdateProductWindow(self.window, self.previous_window, self.item_no, self.query)
+        return UpdateProductWindow(self.window, self.previous_window, self.item_no, self.query, self.search_phrase)
 
     def cancel(self, *args):
-        return self.previous_window(self.window, SearchWindow, self.item_no, self.query)
+        return self.previous_window(self.window, SearchWindow, self.item_no, self.query, self.search_phrase)
 
     def update_execute(self, *args):
         # initiating validation
@@ -845,10 +866,10 @@ class UpdatePriceWindow(Window):
                 location_id=self.item[10]
             )
             # getting new query and item number
-            self.query = search_db(self.product_type_entry.get())
+            self.query = search_db(self.search_phrase)
             self.item_no = self.new_item_no
 
-            return self.previous_window(self.window, SearchWindow, self.item_no, self.query)
+            return self.previous_window(self.window, SearchWindow, self.item_no, self.query, self.search_phrase)
 
     # getting new query
     @property
@@ -858,6 +879,7 @@ class UpdatePriceWindow(Window):
             if item[9] == self.item[9] and item[10] == self.item[10]:
                 return count
             count += 1
+        return MainWindow(self.window, MainWindow)
 
     def validate(self):
         # validating field length
@@ -891,11 +913,12 @@ class UpdatePriceWindow(Window):
 
 # # # UPDATE PRODUCT # # #
 class UpdateProductWindow(Window):
-    def __init__(self, window, previous_window, item_no, query):
+    def __init__(self, window, previous_window, item_no, query, search_phrase):
         super().__init__(window, previous_window)
         self.item_no = item_no
         self.item = query[item_no]
         self.query = query
+        self.search_phrase = search_phrase
 
         # PRODUCT NAME
         # product name frame
@@ -909,7 +932,7 @@ class UpdateProductWindow(Window):
         self.product_name_label.grid(row=0, column=0)
 
         # product name entry
-        self.product_name_entry = Entry(self.product_name_frame, width=23)
+        self.product_name_entry = Entry(self.product_name_frame, width=25)
         self.product_name_entry.grid(row=0, column=1)
         self.product_name_entry.insert(0, self.item[0])
         self.product_name_entry.focus_set()
@@ -926,7 +949,7 @@ class UpdateProductWindow(Window):
         self.product_type_label.grid(row=0, column=0)
 
         # product type entry
-        self.product_type_entry = Entry(self.product_type_frame, width=24)
+        self.product_type_entry = Entry(self.product_type_frame, width=26)
         self.product_type_entry.grid(row=0, column=1)
         self.product_type_entry.insert(0, self.item[1])
 
@@ -941,7 +964,7 @@ class UpdateProductWindow(Window):
         self.price_label.grid(row=0, column=0)
 
         # price entry
-        self.price_entry = Entry(self.price_frame, width=30)
+        self.price_entry = Entry(self.price_frame, width=32)
         self.price_entry.grid(row=0, column=1)
         self.price_entry.insert(0, self.item[2])
         self.price_entry.configure(state=DISABLED)
@@ -957,7 +980,7 @@ class UpdateProductWindow(Window):
         self.currency_label.grid(row=0, column=0)
 
         # currency entry
-        self.currency_entry = Entry(self.currency_unit_frame, width=8)
+        self.currency_entry = Entry(self.currency_unit_frame, width=9)
         self.currency_entry.grid(row=0, column=1)
         self.currency_entry.insert(0, self.item[3])
         self.currency_entry.configure(state=DISABLED)
@@ -967,7 +990,7 @@ class UpdateProductWindow(Window):
         self.unit_label.grid(row=0, column=2)
 
         # unit entry
-        self.unit_entry = Entry(self.currency_unit_frame, width=14)
+        self.unit_entry = Entry(self.currency_unit_frame, width=15)
         self.unit_entry.grid(row=0, column=3)
         self.unit_entry.insert(0, self.item[4])
         self.unit_entry.configure(state=DISABLED)
@@ -985,7 +1008,7 @@ class UpdateProductWindow(Window):
 
         # location name entry
         self.location_name_entry = Entry(
-            self.location_frame, width=22)
+            self.location_frame, width=25)
         self.location_name_entry.grid(row=0, column=1)
         self.location_name_entry.insert(0, self.item[5])
         self.location_name_entry.configure(state=DISABLED)
@@ -1002,7 +1025,7 @@ class UpdateProductWindow(Window):
 
         # general location entry
         self.general_location_entry = Entry(
-            self.general_location_frame, width=21)
+            self.general_location_frame, width=23)
         self.general_location_entry.grid(row=0, column=3)
         self.general_location_entry.insert(0, self.item[6])
         self.general_location_entry.configure(state=DISABLED)
@@ -1045,7 +1068,7 @@ class UpdateProductWindow(Window):
         self.city_label.grid(row=0, column=4)
 
         # city entry
-        self.city_entry = Entry(self.city_frame, width=31)
+        self.city_entry = Entry(self.city_frame, width=33)
         self.city_entry.grid(row=0, column=5)
         self.city_entry.insert(0, self.item[8])
         self.city_entry.configure(state=DISABLED)
@@ -1065,13 +1088,13 @@ class UpdateProductWindow(Window):
         self.window.bind('<Escape>', self.cancel)
 
         # # # SIZE REFERENCE # # #
-        self.lbl = Label(window, text='020406081012141618202224262830323436')
+        self.lbl = Label(window, text='02040608101214161820222426283032343637')
         self.lbl.grid(row=self.main_row, column=0, columnspan=2)
-        self.et = Entry(window, width=36)
+        self.et = Entry(window, width=38)
         self.et.grid(row=self.main_row, column=0, columnspan=2)
 
     def cancel(self, *args):
-        return self.previous_window(self.window, SearchWindow, self.item_no, self.query)
+        return self.previous_window(self.window, SearchWindow, self.item_no, self.query, self.search_phrase)
 
     def update_execute(self, *args):
         # initiating validation
@@ -1087,7 +1110,7 @@ class UpdateProductWindow(Window):
             self.query = search_db(self.product_type_entry.get())
             self.item_no = self.new_item_no
 
-            return self.previous_window(self.window, SearchWindow, self.item_no, self.query)
+            return self.previous_window(self.window, SearchWindow, self.item_no, self.query, self.search_phrase)
 
     # getting new query
     @property
@@ -1097,6 +1120,7 @@ class UpdateProductWindow(Window):
             if item[9] == self.item[9] and item[10] == self.item[10]:
                 return count
             count += 1
+        return MainWindow(self.window, MainWindow)
 
     def validate(self):
         # validating field length
@@ -1115,11 +1139,12 @@ class UpdateProductWindow(Window):
 
 # # # -------------------- UPDATE LOCATION -------------------- # # #
 class UpdateLocationWindow(Window):
-    def __init__(self, window, previous_window, item_no, query):
+    def __init__(self, window, previous_window, item_no, query, search_phrase):
         super().__init__(window, previous_window)
         self.item_no = item_no
         self.item = query[item_no]
         self.query = query
+        self.search_phrase = search_phrase
 
         # PRODUCT NAME
         # product name frame
@@ -1133,7 +1158,7 @@ class UpdateLocationWindow(Window):
         self.product_name_label.grid(row=0, column=0)
 
         # product name entry
-        self.product_name_entry = Entry(self.product_name_frame, width=23)
+        self.product_name_entry = Entry(self.product_name_frame, width=25)
         self.product_name_entry.grid(row=0, column=1)
         self.product_name_entry.insert(0, self.item[0])
         self.product_name_entry.configure(state=DISABLED)
@@ -1150,7 +1175,7 @@ class UpdateLocationWindow(Window):
         self.product_type_label.grid(row=0, column=0)
 
         # product type entry
-        self.product_type_entry = Entry(self.product_type_frame, width=24)
+        self.product_type_entry = Entry(self.product_type_frame, width=26)
         self.product_type_entry.grid(row=0, column=1)
         self.product_type_entry.insert(0, self.item[1])
         self.product_type_entry.configure(state=DISABLED)
@@ -1166,7 +1191,7 @@ class UpdateLocationWindow(Window):
         self.price_label.grid(row=0, column=0)
 
         # price entry
-        self.price_entry = Entry(self.price_frame, width=30)
+        self.price_entry = Entry(self.price_frame, width=32)
         self.price_entry.grid(row=0, column=1)
         self.price_entry.insert(0, self.item[2])
         self.price_entry.configure(state=DISABLED)
@@ -1182,7 +1207,7 @@ class UpdateLocationWindow(Window):
         self.currency_label.grid(row=0, column=0)
 
         # currency entry
-        self.currency_entry = Entry(self.currency_unit_frame, width=8)
+        self.currency_entry = Entry(self.currency_unit_frame, width=9)
         self.currency_entry.grid(row=0, column=1)
         self.currency_entry.insert(0, self.item[3])
         self.currency_entry.configure(state=DISABLED)
@@ -1192,7 +1217,7 @@ class UpdateLocationWindow(Window):
         self.unit_label.grid(row=0, column=2)
 
         # unit entry
-        self.unit_entry = Entry(self.currency_unit_frame, width=14)
+        self.unit_entry = Entry(self.currency_unit_frame, width=15)
         self.unit_entry.grid(row=0, column=3)
         self.unit_entry.insert(0, self.item[4])
         self.unit_entry.configure(state=DISABLED)
@@ -1210,7 +1235,7 @@ class UpdateLocationWindow(Window):
 
         # location name entry
         self.location_name_entry = Entry(
-            self.location_frame, width=22)
+            self.location_frame, width=25)
         self.location_name_entry.grid(row=0, column=1)
         self.location_name_entry.insert(0, self.item[5])
         self.location_name_entry.focus_set()
@@ -1227,7 +1252,7 @@ class UpdateLocationWindow(Window):
 
         # general location entry
         self.general_location_entry = Entry(
-            self.general_location_frame, width=21)
+            self.general_location_frame, width=23)
         self.general_location_entry.grid(row=0, column=3)
         self.general_location_entry.insert(0, self.item[6])
 
@@ -1269,7 +1294,7 @@ class UpdateLocationWindow(Window):
         self.city_label.grid(row=0, column=4)
 
         # city entry
-        self.city_entry = Entry(self.city_frame, width=31)
+        self.city_entry = Entry(self.city_frame, width=33)
         self.city_entry.grid(row=0, column=5)
         self.city_entry.insert(0, self.item[8])
 
@@ -1288,13 +1313,13 @@ class UpdateLocationWindow(Window):
         self.window.bind('<Escape>', self.cancel)
 
         # # # SIZE REFERENCE # # #
-        self.lbl = Label(window, text='020406081012141618202224262830323436')
+        self.lbl = Label(window, text='02040608101214161820222426283032343637')
         self.lbl.grid(row=self.main_row, column=0, columnspan=2)
-        self.et = Entry(window, width=36)
+        self.et = Entry(window, width=38)
         self.et.grid(row=self.main_row, column=0, columnspan=2)
 
     def cancel(self, *args):
-        return self.previous_window(self.window, SearchWindow, self.item_no, self.query)
+        return self.previous_window(self.window, SearchWindow, self.item_no, self.query, self.search_phrase)
 
     def update_execute(self, *args):
         # initiating validation
@@ -1308,7 +1333,7 @@ class UpdateLocationWindow(Window):
                 location_id=self.item[10]
             )
             # getting new query and item number
-            self.query = search_db(self.product_type_entry.get())
+            self.query = search_db(self.search_phrase)
             self.item_no = self.new_item_no
 
             return self.previous_window(self.window, SearchWindow, self.item_no, self.query)
@@ -1321,6 +1346,7 @@ class UpdateLocationWindow(Window):
             if item[9] == self.item[9] and item[10] == self.item[10]:
                 return count
             count += 1
+        return MainWindow(self.window, MainWindow)
 
     def validate(self):
         # validating field length
@@ -1341,8 +1367,8 @@ class UpdateLocationWindow(Window):
 
 if __name__ == '__main__':
     root = Tk()
-
-    SearchWindow(root, MainWindow, search_db('mleko'))
+    MainWindow(root, MainWindow)
+    # SearchWindow(root, MainWindow, search_db('mleko'))
     root.mainloop()
 
 # # # MOBILE REFERENCES # # #
