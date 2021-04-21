@@ -1,6 +1,9 @@
 from tkinter import *
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 from datetime import date
+from PIL import Image as ImagePIL, ImageTk, UnidentifiedImageError
+import io
+import os
 from database import (
     create_in_db,
     search_db,
@@ -10,8 +13,9 @@ from database import (
     delete_db
 )
 
-
 # # # WINDOW PARENT # # #
+
+
 class Window:
     def __init__(self, window, previous_window):
         self.window = window
@@ -87,6 +91,7 @@ class CreateNewWindow(Window):
         super().__init__(window, previous_window)
         self.query = kwargs.get('query')
         self.search_phrase = kwargs.get('search_phrase', 'qwerty')
+        self.picture = io.BytesIO()
 
         # PRODUCT NAME
         # product name frame
@@ -223,6 +228,11 @@ class CreateNewWindow(Window):
         self.city_entry.grid(row=0, column=5)
         self.city_entry.insert(0, 'Novi Sad')
 
+        # UPLOAD BUTTON
+        self.upload_button = Button(
+            self.window, text='UPLOAD PICTURE', command=self.upload)
+        self.upload_button.grid(row=self.main_row, column=0, columnspan=2)
+
         # CANCEL BUTTON
         self.cancel_button = Button(window, text='CANCEL', command=self.cancel)
         self.cancel_button.grid(row=self.main_row, column=0, pady=5)
@@ -243,6 +253,44 @@ class CreateNewWindow(Window):
         self.et = Entry(window, width=38)
         self.et.grid(row=self.main_row, column=0, columnspan=2)
 
+    # UPLOAD PICTURE
+    def upload(self):
+        # opening file browser
+        filename = filedialog.askopenfilename(
+            initialdir=os.getcwd(),
+            title='Select picture',
+            filetypes=(('all files', '*.*'),)
+        )
+        try:
+            img = ImagePIL.open(filename)
+        except UnidentifiedImageError:
+            messagebox.showerror('Error', 'Unsupported image!')
+        except AttributeError:
+            pass
+        else:
+            # converting to RGB
+            if img.mode != 'RGB':
+                img.convert('RGB')
+
+            # cropping image
+            if img.size[0] > img.size[1]:
+                x = (img.size[0] - img.size[1]) // 2
+                cropped_img = img.crop((x, 0, img.size[0]-x, img.size[1]))
+            elif img.size[0] < img.size[1]:
+                x = (img.size[1] - img.size[0]) // 2
+                cropped_img = img.crop((0, x, img.size[0], img.size[1]-x))
+            else:
+                cropped_img = img
+
+            # resizing image
+            cropped_img.thumbnail((1000, 1000))
+
+            # converting to bytes
+            self.picture = io.BytesIO()
+            cropped_img.save(self.picture, format='JPEG', quality=30)
+
+    # CANCEL
+
     def cancel(self, *args):
         query = search_db(self.search_phrase)
         if query == []:
@@ -250,6 +298,7 @@ class CreateNewWindow(Window):
         else:
             return self.previous_window(self.window, self.previous_window, query, self.search_phrase)
 
+    # CREATE ITEM
     def create_execute(self, *args):
         # initiating validation
         if self.validate() is True:
@@ -258,20 +307,35 @@ class CreateNewWindow(Window):
             submit_date = self.year_entry.get() + '-' + self.month_entry.get() + \
                 '-' + self.day_entry.get()
 
-            # submitting to database
-            create_in_db(
-                product_type=self.product_type_entry.get(),
-                product_name=self.product_name_entry.get(),
-                location_name=self.location_name_entry.get(),
-                city=self.city_entry.get(),
-                general_location=self.general_location_entry.get(),
-                price=self.price_entry.get(),
-                currency=self.currency_entry.get(),
-                unit=self.unit_entry.get(),
-                date=submit_date
-            )
+            # inserting to db with no picture
+            if len(self.picture.getvalue()) == 0:
+                create_in_db(
+                    product_type=self.product_type_entry.get(),
+                    product_name=self.product_name_entry.get(),
+                    location_name=self.location_name_entry.get(),
+                    city=self.city_entry.get(),
+                    general_location=self.general_location_entry.get(),
+                    price=self.price_entry.get(),
+                    currency=self.currency_entry.get(),
+                    unit=self.unit_entry.get(),
+                    date=submit_date
+                )
+            # inserting to db with picture
+            else:
+                create_in_db(
+                    product_type=self.product_type_entry.get(),
+                    product_name=self.product_name_entry.get(),
+                    location_name=self.location_name_entry.get(),
+                    city=self.city_entry.get(),
+                    general_location=self.general_location_entry.get(),
+                    price=self.price_entry.get(),
+                    currency=self.currency_entry.get(),
+                    unit=self.unit_entry.get(),
+                    date=submit_date,
+                    picture=self.picture.getvalue()
+                )
             query = search_db(self.search_phrase)
-            # CreateNewWindow(self.window, self.previous_window, query=query)
+            CreateNewWindow(self.window, self.previous_window, query=query)
 
     def validate(self):
         # validating field length
@@ -439,6 +503,7 @@ class SearchWindow(Window):
     # scroll region
     def scroll_region(self, *args):
         self.canvas.configure(scrollregion=self.canvas.bbox('all'))
+        self.scroll_bar.set(0, 0)
 
     # mouse scroll
     def mouse_scroll(self, event):
@@ -573,6 +638,17 @@ class DetailWindow(Window):
         self.city_item_label = Label(
             self.city_frame, text=self.item[8], width=22, anchor=CENTER)
         self.city_item_label.grid(row=0, column=1)
+
+        # PICTURE
+        if self.item[11] is not None:
+            self.img_canvas = Canvas(self.window, width=300, height=300)
+            self.img_from_bytes = ImagePIL.open(io.BytesIO(self.item[11]))
+            self.img_from_bytes.thumbnail((300, 300))
+            self.img_canvas.img = ImageTk.PhotoImage(
+                self.img_from_bytes)
+            self.img_canvas.grid(row=self.main_row, column=0, columnspan=3)
+            self.img_canvas.create_image(
+                0, 0, anchor=NW, image=self.img_canvas.img)
 
         # # # PREVIOUS AND NEXT BUTTONS
         # PREVIUOUS BUTTON
@@ -919,12 +995,13 @@ class UpdateProductWindow(Window):
         self.item = query[item_no]
         self.query = query
         self.search_phrase = search_phrase
+        self.picture = io.BytesIO()
 
         # PRODUCT NAME
         # product name frame
         self.product_name_frame = LabelFrame(window)
         self.product_name_frame.grid(
-            row=self.main_row, column=0, columnspan=2, pady=5)
+            row=self.main_row, column=0, columnspan=3, pady=5)
 
         # product name label
         self.product_name_label = Label(
@@ -941,7 +1018,7 @@ class UpdateProductWindow(Window):
         # product type frame
         self.product_type_frame = LabelFrame(window)
         self.product_type_frame.grid(
-            row=self.main_row, column=0, columnspan=2, pady=5)
+            row=self.main_row, column=0, columnspan=3, pady=5)
 
         # product type label
         self.product_type_label = Label(
@@ -957,7 +1034,7 @@ class UpdateProductWindow(Window):
         # price frame
         self.price_frame = LabelFrame(window)
         self.price_frame.grid(row=self.main_row, column=0,
-                              columnspan=2, pady=5)
+                              columnspan=3, pady=5)
 
         # price label
         self.price_label = Label(self.price_frame, text='Price:')
@@ -973,7 +1050,7 @@ class UpdateProductWindow(Window):
         # currency and unit frame
         self.currency_unit_frame = LabelFrame(window)
         self.currency_unit_frame.grid(
-            row=self.main_row, column=0, columnspan=2, pady=5)
+            row=self.main_row, column=0, columnspan=3, pady=5)
 
         # currency label
         self.currency_label = Label(self.currency_unit_frame, text='Currency:')
@@ -999,7 +1076,7 @@ class UpdateProductWindow(Window):
         # location frame
         self.location_frame = LabelFrame(window)
         self.location_frame.grid(
-            row=self.main_row, column=0, columnspan=2, pady=5)
+            row=self.main_row, column=0, columnspan=3, pady=5)
 
         # location name label
         self.location_name_label = Label(
@@ -1016,7 +1093,7 @@ class UpdateProductWindow(Window):
         # general location frame
         self.general_location_frame = LabelFrame(window)
         self.general_location_frame.grid(
-            row=self.main_row, column=0, columnspan=2, pady=5)
+            row=self.main_row, column=0, columnspan=3, pady=5)
 
         # general location label
         self.general_location_label = Label(
@@ -1033,7 +1110,7 @@ class UpdateProductWindow(Window):
         # DATE
         # date frame
         self.date_frame = LabelFrame(window)
-        self.date_frame.grid(row=self.main_row, column=0, columnspan=2, pady=5)
+        self.date_frame.grid(row=self.main_row, column=0, columnspan=3, pady=5)
 
         # date label
         self.location_name_label = Label(self.date_frame, text='Date:')
@@ -1062,7 +1139,7 @@ class UpdateProductWindow(Window):
         # CITY
         # city frame
         self.city_frame = LabelFrame(window)
-        self.city_frame.grid(row=self.main_row, column=0, columnspan=2, pady=5)
+        self.city_frame.grid(row=self.main_row, column=0, columnspan=3, pady=5)
         # city label
         self.city_label = Label(self.city_frame, text='City:')
         self.city_label.grid(row=0, column=4)
@@ -1073,6 +1150,25 @@ class UpdateProductWindow(Window):
         self.city_entry.insert(0, self.item[8])
         self.city_entry.configure(state=DISABLED)
 
+        # ROTATE LEFT BUTTON
+        self.rotate_left_button = Button(
+            self.window, text='ROTATE L', command=self.rotate_left)
+        self.rotate_left_button.grid(row=self.main_row, column=0)
+
+        # UPLOAD BUTTON
+        self.upload_button = Button(
+            self.window, text='UPLOAD PICTURE', command=self.upload)
+        self.upload_button.grid(row=self.main_row_same, column=1)
+
+        # ROTATE RIGHT BUTTON
+        self.rotate_right_button = Button(
+            self.window, text='ROTATE R', command=self.rotate_right)
+        self.rotate_right_button.grid(row=self.main_row_same, column=2)
+
+        if self.item[11] is None:
+            self.rotate_left_button.configure(state=DISABLED)
+            self.rotate_right_button.configure(state=DISABLED)
+
         # CANCEL BUTTON
         self.cancel_button = Button(window, text='CANCEL', command=self.cancel)
         self.cancel_button.grid(row=self.main_row, column=0, pady=5)
@@ -1081,7 +1177,7 @@ class UpdateProductWindow(Window):
         self.update_execute_button = Button(
             window, text='UPDATE', command=self.update_execute)
         self.update_execute_button.grid(
-            row=self.main_row_same, column=1, pady=5)
+            row=self.main_row_same, column=2, pady=5)
 
         # bind <Return> and <Escape>
         self.window.bind('<Return>', self.update_execute)
@@ -1089,25 +1185,88 @@ class UpdateProductWindow(Window):
 
         # # # SIZE REFERENCE # # #
         self.lbl = Label(window, text='02040608101214161820222426283032343637')
-        self.lbl.grid(row=self.main_row, column=0, columnspan=2)
+        self.lbl.grid(row=self.main_row, column=0, columnspan=3)
         self.et = Entry(window, width=38)
-        self.et.grid(row=self.main_row, column=0, columnspan=2)
+        self.et.grid(row=self.main_row, column=0, columnspan=3)
+
+    # ROTATE LEFT
+    def rotate_left(self):
+        img = ImagePIL.open(io.BytesIO(self.item[11]))
+        rotated_img = img.rotate(90)
+        rotated_img.save(self.picture, format='JPEG')
+
+    # ROTATE RIGHT
+    def rotate_right(self):
+        img = ImagePIL.open(io.BytesIO(self.item[11]))
+        rotated_img = img.rotate(270)
+        rotated_img.save(self.picture, format='JPEG')
+
+    # UPLOAD PICTURE
+
+    def upload(self):
+        # opening file browser
+        filename = filedialog.askopenfilename(
+            initialdir=os.getcwd(),
+            title='Select picture',
+            filetypes=(('all files', '*.*'),)
+        )
+        try:
+            img = ImagePIL.open(filename)
+        except UnidentifiedImageError:
+            messagebox.showerror('Error', 'Unsupported image!')
+        except AttributeError:
+            pass
+        else:
+            # converting to RGB
+            if img.mode != 'RGB':
+                img.convert('RGB')
+
+            # cropping image
+            if img.size[0] > img.size[1]:
+                x = (img.size[0] - img.size[1]) // 2
+                cropped_img = img.crop((x, 0, img.size[0]-x, img.size[1]))
+            elif img.size[0] < img.size[1]:
+                x = (img.size[1] - img.size[0]) // 2
+                cropped_img = img.crop((0, x, img.size[0], img.size[1]-x))
+            else:
+                cropped_img = img
+
+            # resizing image
+            cropped_img.thumbnail((1000, 1000))
+
+            # converting to bytes
+            self.picture = io.BytesIO()
+            cropped_img.save(self.picture, format='JPEG', quality=30)
+
+    # CANCEL
 
     def cancel(self, *args):
         return self.previous_window(self.window, SearchWindow, self.item_no, self.query, self.search_phrase)
 
+    # UPDATE
     def update_execute(self, *args):
         # initiating validation
         if self.validate() is True:
 
-            # submitting to database
-            update_product_db(
-                product_name=self.product_name_entry.get(),
-                product_type=self.product_type_entry.get(),
-                product_id=self.item[9]
-            )
+            # submitting to database with no picture
+            if len(self.picture.getvalue()) == 0:
+                update_product_db(
+                    product_name=self.product_name_entry.get(),
+                    product_type=self.product_type_entry.get(),
+                    product_id=self.item[9]
+                )
+
+            # submitting to database with picture
+            else:
+                update_product_db(
+                    product_name=self.product_name_entry.get(),
+                    product_type=self.product_type_entry.get(),
+                    product_id=self.item[9],
+                    picture=self.picture.getvalue()
+                )
+
             # getting new query and item number
-            self.query = search_db(self.product_type_entry.get())
+            self.query = search_db(self.search_phrase)
             self.item_no = self.new_item_no
 
             return self.previous_window(self.window, SearchWindow, self.item_no, self.query, self.search_phrase)
@@ -1336,7 +1495,7 @@ class UpdateLocationWindow(Window):
             self.query = search_db(self.search_phrase)
             self.item_no = self.new_item_no
 
-            return self.previous_window(self.window, SearchWindow, self.item_no, self.query)
+            return self.previous_window(self.window, SearchWindow, self.item_no, self.query, self.search_phrase)
 
     # getting new query
     @property

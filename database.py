@@ -1,10 +1,11 @@
-from os import name
 import sqlite3
+
+db = './db/test.sqlite3'
 
 
 def create_in_db(**kwargs):
     # connecting to db
-    conn = sqlite3.connect('./db/test.sqlite3')
+    conn = sqlite3.connect(db)
     cur = conn.cursor()
 
     # assigning values to variables
@@ -17,6 +18,7 @@ def create_in_db(**kwargs):
     currency = kwargs.get('currency')
     unit = kwargs.get('unit')
     date = kwargs.get('date')
+    picture = kwargs.get('picture', None)
 
     # searching for same entry in products
     cur.execute(
@@ -35,8 +37,8 @@ def create_in_db(**kwargs):
     except TypeError:
         product_id = None
 
-    # inserting entry to products
-    if product_id is None:
+    # inserting entry to products with no picture
+    if product_id is None and picture is None:
         cur.execute(
             """
             INSERT INTO products(product_type, product_name) VALUES(
@@ -47,6 +49,22 @@ def create_in_db(**kwargs):
             {
                 'product_type': product_type,
                 'product_name': product_name
+            }
+        )
+    # inserting entry to products with picture
+    elif product_id is None and picture is not None:
+        cur.execute(
+            """
+            INSERT INTO products(product_type, product_name, picture) VALUES(
+                :product_type,
+                :product_name,
+                :picture
+            );
+            """,
+            {
+                'product_type': product_type,
+                'product_name': product_name,
+                'picture': picture
             }
         )
 
@@ -144,7 +162,7 @@ def create_in_db(**kwargs):
 
 def search_db(search_phrase):
     # connecting to db
-    conn = sqlite3.connect('./db/test.sqlite3')
+    conn = sqlite3.connect(db)
     cur = conn.cursor()
 
     # searching for entries in db
@@ -153,7 +171,7 @@ def search_db(search_phrase):
         SELECT products.product_name, products.product_type,
             prices.price, prices.currency, prices.unit, locations.location_name,
             locations.general_location, prices.price_date, locations.city,  
-            prices.product_id, prices.location_id  
+            prices.product_id, prices.location_id, products.picture
         FROM locations
         JOIN prices
         ON locations.location_id = prices.location_id
@@ -182,7 +200,7 @@ def search_db(search_phrase):
         SELECT products.product_name, products.product_type,
             prices.price, prices.currency, prices.unit, locations.location_name,
             locations.general_location, prices.price_date, locations.city,  
-            prices.product_id, prices.location_id  
+            prices.product_id, prices.location_id, products.picture
         FROM locations
         JOIN prices
         ON locations.location_id = prices.location_id
@@ -211,7 +229,7 @@ def search_db(search_phrase):
 # UPDATE PRICE
 def update_price_db(**kwargs):
     # connecting to db
-    conn = sqlite3.connect('./db/test.sqlite3')
+    conn = sqlite3.connect(db)
     cur = conn.cursor()
 
     # assigning values to variables
@@ -248,27 +266,48 @@ def update_price_db(**kwargs):
 # UPDATE PRODUCT
 def update_product_db(**kwargs):
     # connecting to db
-    conn = sqlite3.connect('./db/test.sqlite3')
+    conn = sqlite3.connect(db)
     cur = conn.cursor()
 
     # assigning values to variables
     product_name = kwargs.get('product_name')
     product_type = kwargs.get('product_type')
     product_id = kwargs.get('product_id')
+    picture = kwargs.get('picture', None)
 
-    # updating product
-    cur.execute(
-        """
-        UPDATE products
-        SET product_name = :product_name, product_type = :product_type
-        WHERE product_id = :product_id;
-        """,
-        {
-            'product_name': product_name,
-            'product_type': product_type,
-            'product_id': product_id
-        }
-    )
+    # updating product with no picture
+    if picture is None:
+        cur.execute(
+            """
+            UPDATE products
+            SET product_name = :product_name, product_type = :product_type
+            WHERE product_id = :product_id;
+            """,
+            {
+                'product_name': product_name,
+                'product_type': product_type,
+                'product_id': product_id
+            }
+        )
+
+    # updating product with picture
+    else:
+        cur.execute(
+            """
+            UPDATE products
+            SET
+                product_name = :product_name,
+                product_type = :product_type,
+                picture = :picture
+            WHERE product_id = :product_id;
+            """,
+            {
+                'product_name': product_name,
+                'product_type': product_type,
+                'product_id': product_id,
+                'picture': picture
+            }
+        )
     conn.commit()
 
 # UPDATE LOCATION
@@ -276,7 +315,7 @@ def update_product_db(**kwargs):
 
 def update_location_db(**kwargs):
     # connecting to db
-    conn = sqlite3.connect('./db/test.sqlite3')
+    conn = sqlite3.connect(db)
     cur = conn.cursor()
 
     # assigning values to variables
@@ -309,7 +348,7 @@ def update_location_db(**kwargs):
 
 def delete_db(**kwargs):
     # connecting to db
-    conn = sqlite3.connect('./db/test.sqlite3')
+    conn = sqlite3.connect(db)
     cur = conn.cursor()
 
     # assigning values to variables
