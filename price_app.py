@@ -13,9 +13,8 @@ from database import (
     delete_db
 )
 
+
 # # # WINDOW PARENT # # #
-
-
 class Window:
     def __init__(self, window, previous_window):
         self.window = window
@@ -66,12 +65,6 @@ class MainWindow(Window):
             window, text='Create New', command=self.create_new_func)
         self.create_new_button.grid(
             row=self.main_row, column=0, padx=30, pady=5)
-
-        # # # SIZE REFERENCE # # #
-        self.lbl = Label(window, text='0204060810121416182022242628303234367')
-        self.lbl.grid(row=self.main_row, column=0)
-        self.et = Entry(window, width=38)
-        self.et.grid(row=self.main_row, column=0)
 
     def create_new_func(self):
         return CreateNewWindow(self.window, MainWindow)
@@ -231,7 +224,8 @@ class CreateNewWindow(Window):
         # UPLOAD BUTTON
         self.upload_button = Button(
             self.window, text='UPLOAD PICTURE', command=self.upload)
-        self.upload_button.grid(row=self.main_row, column=0, columnspan=2)
+        self.upload_button.grid(
+            row=self.main_row, column=0, columnspan=2, pady=5)
 
         # CANCEL BUTTON
         self.cancel_button = Button(window, text='CANCEL', command=self.cancel)
@@ -246,12 +240,6 @@ class CreateNewWindow(Window):
         # bind <Return> and <Escape>
         self.window.bind('<Return>', self.create_execute)
         self.window.bind('<Escape>', self.cancel)
-
-        # # # SIZE REFERENCE # # #
-        self.lbl = Label(window, text='02040608101214161820222426283032343637')
-        self.lbl.grid(row=self.main_row, column=0, columnspan=2)
-        self.et = Entry(window, width=38)
-        self.et.grid(row=self.main_row, column=0, columnspan=2)
 
     # UPLOAD PICTURE
     def upload(self):
@@ -429,12 +417,6 @@ class SearchWindow(Window):
             window, text='Create New', command=self.create_new_func)
         self.create_new_button.grid(
             row=self.main_row, column=0, padx=30, pady=5, columnspan=2)
-
-        # # # SIZE REFERENCE # # #
-        self.lbl = Label(window, text='02040608101214161820222426283032343637')
-        self.lbl.grid(row=self.main_row, column=0, columnspan=2)
-        self.et = Entry(window, width=38)
-        self.et.grid(row=self.main_row, column=0, columnspan=2)
 
     def create_new_func(self):
         return CreateNewWindow(
@@ -640,13 +622,13 @@ class DetailWindow(Window):
         self.city_item_label.grid(row=0, column=1)
 
         # PICTURE
+        self.img_canvas = Canvas(self.window, width=300, height=300)
+        self.img_canvas.grid(row=self.main_row, column=0, columnspan=3)
         if self.item[11] is not None:
-            self.img_canvas = Canvas(self.window, width=300, height=300)
             self.img_from_bytes = ImagePIL.open(io.BytesIO(self.item[11]))
             self.img_from_bytes.thumbnail((300, 300))
             self.img_canvas.img = ImageTk.PhotoImage(
                 self.img_from_bytes)
-            self.img_canvas.grid(row=self.main_row, column=0, columnspan=3)
             self.img_canvas.create_image(
                 0, 0, anchor=NW, image=self.img_canvas.img)
 
@@ -670,16 +652,10 @@ class DetailWindow(Window):
         # DELETE BUTTON
         self.delete_button = Button(
             self.window, text='DELETE', command=self.delete)
-        self.delete_button.grid(row=self.main_row_same, column=2)
+        self.delete_button.grid(row=self.main_row_same, column=2, pady=5)
 
         # binding escape
         self.window.bind('<Escape>', self.back)
-
-        # # # SIZE REFERENCE # # #
-        self.lbl = Label(window, text='0204060810121416182022242628303234367')
-        self.lbl.grid(row=self.main_row, column=0, columnspan=3)
-        self.et = Entry(window, width=38)
-        self.et.grid(row=self.main_row, column=0, columnspan=3)
 
     def back(self, *args):
         return SearchWindow(self.window, MainWindow, self.query, self.search_phrase)
@@ -687,22 +663,22 @@ class DetailWindow(Window):
     def set_previous_button(self):
         if self.item_no == 0:
             previous_button = Button(self.window, text='<<', state=DISABLED)
-            previous_button.grid(row=self.main_row, column=0)
+            previous_button.grid(row=self.main_row, column=0, pady=5)
         else:
             previous_button = Button(
                 self.window, text='<<', command=self.previous)
-            previous_button.grid(row=self.main_row, column=0)
+            previous_button.grid(row=self.main_row, column=0, pady=5)
             # binding left
             self.window.bind('<Left>', self.previous)
 
     def set_next_button(self):
         if self.item_no + 1 == len(self.query):
             next_button = Button(self.window, text='>>', state=DISABLED)
-            next_button.grid(row=self.main_row_same, column=2)
+            next_button.grid(row=self.main_row_same, column=2, pady=5)
         else:
             next_button = Button(self.window, text='>>',
                                  command=self.next_meth)
-            next_button.grid(row=self.main_row_same, column=2)
+            next_button.grid(row=self.main_row_same, column=2, pady=5)
             # binding right
             self.window.bind('<Right>', self.next_meth)
 
@@ -896,22 +872,17 @@ class UpdatePriceWindow(Window):
         # UPDATE PRODUCT BUTTON
         self.update_product_button = Button(
             self.window, text='EDIT PRODUCT', command=self.update_product)
-        self.update_product_button.grid(row=self.main_row, column=0)
+        self.update_product_button.grid(row=self.main_row, column=0, pady=5)
 
         # UPDATE LOCATION BUTTON
         self.update_location_button = Button(
             self.window, text='EDIT LOCATION', command=self.update_location)
-        self.update_location_button.grid(row=self.main_row_same, column=1)
+        self.update_location_button.grid(
+            row=self.main_row_same, column=1, pady=5)
 
         # bind <Return> and <Escape>
         self.window.bind('<Return>', self.update_execute)
         self.window.bind('<Escape>', self.cancel)
-
-        # # # SIZE REFERENCE # # #
-        self.lbl = Label(window, text='02040608101214161820222426283032343637')
-        self.lbl.grid(row=self.main_row, column=0, columnspan=2)
-        self.et = Entry(window, width=38)
-        self.et.grid(row=self.main_row, column=0, columnspan=2)
 
     # update location
     def update_location(self):
@@ -1155,12 +1126,12 @@ class UpdateProductWindow(Window):
         self.rotate_left_button.img = ImageTk.PhotoImage(
             file='./icons/rotate-left.png')
         self.rotate_left_button.configure(image=self.rotate_left_button.img)
-        self.rotate_left_button.grid(row=self.main_row, column=0)
+        self.rotate_left_button.grid(row=self.main_row, column=0, pady=5)
 
         # UPLOAD BUTTON
         self.upload_button = Button(
             self.window, text='UPLOAD PICTURE', command=self.upload)
-        self.upload_button.grid(row=self.main_row_same, column=1)
+        self.upload_button.grid(row=self.main_row_same, column=1, pady=5)
 
         # ROTATE RIGHT BUTTON
         self.rotate_right_button = Button(
@@ -1168,7 +1139,7 @@ class UpdateProductWindow(Window):
         self.rotate_right_button.img = ImageTk.PhotoImage(
             file='./icons/rotate-right.png')
         self.rotate_right_button.configure(image=self.rotate_right_button.img)
-        self.rotate_right_button.grid(row=self.main_row_same, column=2)
+        self.rotate_right_button.grid(row=self.main_row_same, column=2, pady=5)
 
         if self.item[11] is None:
             self.rotate_left_button.configure(state=DISABLED)
@@ -1187,12 +1158,6 @@ class UpdateProductWindow(Window):
         # bind <Return> and <Escape>
         self.window.bind('<Return>', self.update_execute)
         self.window.bind('<Escape>', self.cancel)
-
-        # # # SIZE REFERENCE # # #
-        self.lbl = Label(window, text='02040608101214161820222426283032343637')
-        self.lbl.grid(row=self.main_row, column=0, columnspan=3)
-        self.et = Entry(window, width=38)
-        self.et.grid(row=self.main_row, column=0, columnspan=3)
 
     # ROTATE LEFT
     def rotate_left(self):
@@ -1476,12 +1441,6 @@ class UpdateLocationWindow(Window):
         self.window.bind('<Return>', self.update_execute)
         self.window.bind('<Escape>', self.cancel)
 
-        # # # SIZE REFERENCE # # #
-        self.lbl = Label(window, text='02040608101214161820222426283032343637')
-        self.lbl.grid(row=self.main_row, column=0, columnspan=2)
-        self.et = Entry(window, width=38)
-        self.et.grid(row=self.main_row, column=0, columnspan=2)
-
     def cancel(self, *args):
         return self.previous_window(self.window, SearchWindow, self.item_no, self.query, self.search_phrase)
 
@@ -1529,10 +1488,10 @@ class UpdateLocationWindow(Window):
         return messagebox.showwarning('Warning', 'Entered fields are not valid')
 
 
+# # # STARTING APP # # #
 if __name__ == '__main__':
     root = Tk()
     MainWindow(root, MainWindow)
-    # SearchWindow(root, MainWindow, search_db('mleko'))
     root.mainloop()
 
 # # # MOBILE REFERENCES # # #

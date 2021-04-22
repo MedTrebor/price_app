@@ -1,6 +1,10 @@
+import os
 import sqlite3
 
-db = './db/test.sqlite3'
+
+# getting db location
+directory = os.path.dirname(os.path.realpath(__file__))
+db = os.path.join(directory, 'db', 'price_app.sqlite3')
 
 
 def create_in_db(**kwargs):
@@ -158,6 +162,7 @@ def create_in_db(**kwargs):
     )
 
     conn.commit()
+    conn.close()
 
 
 def search_db(search_phrase):
@@ -223,6 +228,8 @@ def search_db(search_phrase):
             }
         )
         query = cur.fetchall()
+
+    conn.close()
     return query
 
 
@@ -261,6 +268,7 @@ def update_price_db(**kwargs):
         }
     )
     conn.commit()
+    conn.close()
 
 
 # UPDATE PRODUCT
@@ -309,6 +317,7 @@ def update_product_db(**kwargs):
             }
         )
     conn.commit()
+    conn.close()
 
 # UPDATE LOCATION
 
@@ -342,6 +351,7 @@ def update_location_db(**kwargs):
         }
     )
     conn.commit()
+    conn.close()
 
 # DELETE ENTRY
 
@@ -405,7 +415,4 @@ def delete_db(**kwargs):
             {'location_id': location_id}
         )
     conn.commit()
-
-
-if __name__ == '__main__':
-    print(search_db('mleko'))
+    conn.close()
