@@ -353,9 +353,8 @@ def update_location_db(**kwargs):
     conn.commit()
     conn.close()
 
+
 # DELETE ENTRY
-
-
 def delete_db(**kwargs):
     # connecting to db
     conn = sqlite3.connect(db)

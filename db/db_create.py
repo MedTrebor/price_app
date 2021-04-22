@@ -5,6 +5,7 @@ import sqlite3
 directory = os.path.dirname(os.path.realpath(__file__))
 db_name = os.path.join(directory, 'price_app.sqlite3')
 
+
 conn = sqlite3.connect(db_name)
 cur = conn.cursor()
 

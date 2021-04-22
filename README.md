@@ -7,7 +7,7 @@ Reason for its small window size is that it was developed for use on my android 
 
 ## Requirements
 
-You need to have **python** installed on your device in order to run this app. You also have to install **Pillow** package for python. In order to install it, just run this in your console:
+You need to have **python** installed on your device in order to run this app. You also have to install **Pillow** package for python. In order to install it, run this in your console:
 
 ```bash
 pip install Pillow
@@ -29,4 +29,4 @@ Database was not included because mine is populated with my products and prices.
 
 ## Running app
 
-Just run `price_app.py` in python. Everything else is self explanatory. Enjoy!
+Run `price_app.py` in python. Everything else is self explanatory. Enjoy!

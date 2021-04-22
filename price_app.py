@@ -1494,6 +1494,7 @@ if __name__ == '__main__':
     MainWindow(root, MainWindow)
     root.mainloop()
 
+
 # # # MOBILE REFERENCES # # #
 # Canvas(width=1000, height=1800)
 # separator: 70*'-'
