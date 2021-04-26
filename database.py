@@ -4,7 +4,7 @@ import sqlite3
 
 # getting db location
 directory = os.path.dirname(os.path.realpath(__file__))
-db = os.path.join(directory, 'db', 'test.sqlite3')
+db = os.path.join(directory, 'db', 'price_app.sqlite3')
 
 
 def create_in_db(**kwargs):
