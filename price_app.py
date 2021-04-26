@@ -53,7 +53,7 @@ class MainWindow(Window):
         self.search_frame.grid(row=self.main_row, column=0, pady=5)
         self.search_label = Label(self.search_frame, text='Search:')
         self.search_label.grid(row=0, column=0)
-        self.search_entry = Entry(self.search_frame, width=21)
+        self.search_entry = Entry(self.search_frame, width=22)
         self.search_entry.focus_set()
         self.search_entry.bind('<Return>', self.search)
         self.search_entry.grid(row=0, column=1)
@@ -100,7 +100,7 @@ class CreateNewWindow(Window):
         self.product_name_label.grid(row=0, column=0)
 
         # product name entry
-        self.product_name_entry = Entry(self.product_name_frame, width=25)
+        self.product_name_entry = Entry(self.product_name_frame, width=26)
         self.product_name_entry.grid(row=0, column=1)
         self.product_name_entry.focus_set()
 
@@ -116,7 +116,7 @@ class CreateNewWindow(Window):
         self.product_type_label.grid(row=0, column=0)
 
         # product type entry
-        self.product_type_entry = Entry(self.product_type_frame, width=26)
+        self.product_type_entry = Entry(self.product_type_frame, width=27)
         self.product_type_entry.grid(row=0, column=1)
 
         # PRICE
@@ -130,7 +130,7 @@ class CreateNewWindow(Window):
         self.price_label.grid(row=0, column=0)
 
         # price entry
-        self.price_entry = Entry(self.price_frame, width=32)
+        self.price_entry = Entry(self.price_frame, width=33)
         self.price_entry.grid(row=0, column=1)
 
         # CURRENCY AND UNIT
@@ -158,7 +158,7 @@ class CreateNewWindow(Window):
         self.unit_number.insert(0, '1')
 
         # unit entry
-        self.unit_entry = Entry(self.currency_unit_frame, width=11)
+        self.unit_entry = Entry(self.currency_unit_frame, width=12)
         self.unit_entry.grid(row=0, column=4)
 
         # LOCATION
@@ -173,7 +173,7 @@ class CreateNewWindow(Window):
         self.location_name_label.grid(row=0, column=0)
 
         # location name entry
-        self.location_name_entry = Entry(self.location_frame, width=24)
+        self.location_name_entry = Entry(self.location_frame, width=25)
         self.location_name_entry.grid(row=0, column=1)
 
         # general location frame
@@ -188,7 +188,7 @@ class CreateNewWindow(Window):
 
         # general location entry
         self.general_location_entry = Entry(
-            self.general_location_frame, width=23)
+            self.general_location_frame, width=24)
         self.general_location_entry.grid(row=0, column=3)
 
         # DATE
@@ -224,7 +224,7 @@ class CreateNewWindow(Window):
         self.city_label.grid(row=0, column=4)
 
         # city entry
-        self.city_entry = Entry(self.city_frame, width=33)
+        self.city_entry = Entry(self.city_frame, width=34)
         self.city_entry.grid(row=0, column=5)
         self.city_entry.insert(0, 'Novi Sad')
 
@@ -446,7 +446,7 @@ class SearchWindow(Window):
         self.search_label = Label(self.search_frame, text='Search:')
         self.search_label.grid(row=0, column=0)
         # search entry
-        self.search_entry = Entry(self.search_frame, width=21)
+        self.search_entry = Entry(self.search_frame, width=22)
         self.search_entry.grid(row=0, column=1)
         self.search_entry.focus_set()
         self.search_entry.bind('<Return>', self.search)
@@ -583,7 +583,7 @@ class DetailWindow(Window):
 
         # product name item label
         self.product_name_item_label = Label(
-            self.product_name_frame, text=self.item[0], width=22, anchor=CENTER)
+            self.product_name_frame, text=self.item[0], width=23, anchor=CENTER)
         self.product_name_item_label.grid(row=0, column=1)
 
         # PRODUCT TYPE
@@ -598,7 +598,7 @@ class DetailWindow(Window):
 
         # product type item label
         self.product_type_item_label = Label(
-            self.product_type_frame, text=self.item[1], width=22, anchor=CENTER)
+            self.product_type_frame, text=self.item[1], width=23, anchor=CENTER)
         self.product_type_item_label.grid(row=0, column=1)
 
         # PRICE
@@ -613,7 +613,7 @@ class DetailWindow(Window):
 
         # price item label
         self.price_item_label = Label(
-            self.price_frame, text=f'{self.item[2]:.2f} {self.item[3]}', width=22, anchor=CENTER)
+            self.price_frame, text=f'{self.item[2]:.2f} {self.item[3]}', width=23, anchor=CENTER)
         self.price_item_label.grid(row=0, column=1)
 
         # PRICE PER UNIT
@@ -630,7 +630,7 @@ class DetailWindow(Window):
         # price per unit item label
         self.price_per_unit_item_label = Label(
             self.price_per_unit_frame, text=f'{self.item[12]:.2f} {self.item[3]}/{self.item[4]}',
-            width=22, anchor=CENTER)
+            width=23, anchor=CENTER)
         self.price_per_unit_item_label.grid(row=0, column=1)
 
         # LOCATION NAME
@@ -646,7 +646,7 @@ class DetailWindow(Window):
 
         # location name item label
         self.location_name_item_label = Label(
-            self.location_name_frame, text=self.item[5], width=22, anchor=CENTER)
+            self.location_name_frame, text=self.item[5], width=23, anchor=CENTER)
         self.location_name_item_label.grid(row=0, column=1)
 
         # GENERAL LOCATION
@@ -662,7 +662,7 @@ class DetailWindow(Window):
 
         # general_location item label
         self.general_location_item_label = Label(
-            self.general_location_frame, text=self.item[6], width=22, anchor=CENTER)
+            self.general_location_frame, text=self.item[6], width=23, anchor=CENTER)
         self.general_location_item_label.grid(row=0, column=1)
 
         # DATE
@@ -683,7 +683,7 @@ class DetailWindow(Window):
 
         # date item label
         self.date_item_label = Label(
-            self.date_frame, text=f'{self.day}.{self.month}.{self.year}.', width=22, anchor=CENTER)
+            self.date_frame, text=f'{self.day}.{self.month}.{self.year}.', width=23, anchor=CENTER)
         self.date_item_label.grid(row=0, column=1)
 
         # CITY
@@ -699,7 +699,7 @@ class DetailWindow(Window):
 
         # city item label
         self.city_item_label = Label(
-            self.city_frame, text=self.item[8], width=22, anchor=CENTER)
+            self.city_frame, text=self.item[8], width=23, anchor=CENTER)
         self.city_item_label.grid(row=0, column=1)
 
         # PICTURE
@@ -817,7 +817,7 @@ class UpdatePriceWindow(Window):
         self.product_name_label.grid(row=0, column=0)
 
         # product name entry
-        self.product_name_entry = Entry(self.product_name_frame, width=25)
+        self.product_name_entry = Entry(self.product_name_frame, width=26)
         self.product_name_entry.grid(row=0, column=1)
         self.product_name_entry.insert(0, self.item[0])
         self.product_name_entry.configure(state=DISABLED)
@@ -834,7 +834,7 @@ class UpdatePriceWindow(Window):
         self.product_type_label.grid(row=0, column=0)
 
         # product type entry
-        self.product_type_entry = Entry(self.product_type_frame, width=26)
+        self.product_type_entry = Entry(self.product_type_frame, width=27)
         self.product_type_entry.grid(row=0, column=1)
         self.product_type_entry.insert(0, self.item[1])
         self.product_type_entry.configure(state=DISABLED)
@@ -850,7 +850,7 @@ class UpdatePriceWindow(Window):
         self.price_label.grid(row=0, column=0)
 
         # price entry
-        self.price_entry = Entry(self.price_frame, width=32)
+        self.price_entry = Entry(self.price_frame, width=33)
         self.price_entry.grid(row=0, column=1)
         self.price_entry.insert(0, self.item[2])
         self.price_entry.focus_set()
@@ -881,7 +881,7 @@ class UpdatePriceWindow(Window):
         self.unit_number.insert(0, str(self.get_unit_number))
 
         # unit entry
-        self.unit_entry = Entry(self.currency_unit_frame, width=11)
+        self.unit_entry = Entry(self.currency_unit_frame, width=12)
         self.unit_entry.grid(row=0, column=4)
         self.unit_entry.insert(0, self.item[4])
 
@@ -915,7 +915,7 @@ class UpdatePriceWindow(Window):
 
         # general location entry
         self.general_location_entry = Entry(
-            self.general_location_frame, width=23)
+            self.general_location_frame, width=24)
         self.general_location_entry.grid(row=0, column=3)
         self.general_location_entry.insert(0, self.item[6])
         self.general_location_entry.configure(state=DISABLED)
@@ -953,7 +953,7 @@ class UpdatePriceWindow(Window):
         self.city_label.grid(row=0, column=4)
 
         # city entry
-        self.city_entry = Entry(self.city_frame, width=33)
+        self.city_entry = Entry(self.city_frame, width=34)
         self.city_entry.grid(row=0, column=5)
         self.city_entry.insert(0, self.item[8])
         self.city_entry.configure(state=DISABLED)
@@ -1087,7 +1087,7 @@ class UpdateProductWindow(Window):
         self.product_name_label.grid(row=0, column=0)
 
         # product name entry
-        self.product_name_entry = Entry(self.product_name_frame, width=25)
+        self.product_name_entry = Entry(self.product_name_frame, width=26)
         self.product_name_entry.grid(row=0, column=1)
         self.product_name_entry.insert(0, self.item[0])
         self.product_name_entry.focus_set()
@@ -1104,7 +1104,7 @@ class UpdateProductWindow(Window):
         self.product_type_label.grid(row=0, column=0)
 
         # product type entry
-        self.product_type_entry = Entry(self.product_type_frame, width=26)
+        self.product_type_entry = Entry(self.product_type_frame, width=27)
         self.product_type_entry.grid(row=0, column=1)
         self.product_type_entry.insert(0, self.item[1])
 
@@ -1119,7 +1119,7 @@ class UpdateProductWindow(Window):
         self.price_label.grid(row=0, column=0)
 
         # price entry
-        self.price_entry = Entry(self.price_frame, width=32)
+        self.price_entry = Entry(self.price_frame, width=33)
         self.price_entry.grid(row=0, column=1)
         self.price_entry.insert(0, self.item[2])
         self.price_entry.configure(state=DISABLED)
@@ -1152,7 +1152,7 @@ class UpdateProductWindow(Window):
         self.unit_number.configure(state=DISABLED)
 
         # unit entry
-        self.unit_entry = Entry(self.currency_unit_frame, width=11)
+        self.unit_entry = Entry(self.currency_unit_frame, width=12)
         self.unit_entry.grid(row=0, column=4)
         self.unit_entry.insert(0, self.item[4])
         self.unit_entry.configure(state=DISABLED)
@@ -1187,7 +1187,7 @@ class UpdateProductWindow(Window):
 
         # general location entry
         self.general_location_entry = Entry(
-            self.general_location_frame, width=23)
+            self.general_location_frame, width=24)
         self.general_location_entry.grid(row=0, column=3)
         self.general_location_entry.insert(0, self.item[6])
         self.general_location_entry.configure(state=DISABLED)
@@ -1230,7 +1230,7 @@ class UpdateProductWindow(Window):
         self.city_label.grid(row=0, column=4)
 
         # city entry
-        self.city_entry = Entry(self.city_frame, width=33)
+        self.city_entry = Entry(self.city_frame, width=34)
         self.city_entry.grid(row=0, column=5)
         self.city_entry.insert(0, self.item[8])
         self.city_entry.configure(state=DISABLED)
@@ -1401,7 +1401,7 @@ class UpdateLocationWindow(Window):
         self.product_name_label.grid(row=0, column=0)
 
         # product name entry
-        self.product_name_entry = Entry(self.product_name_frame, width=25)
+        self.product_name_entry = Entry(self.product_name_frame, width=26)
         self.product_name_entry.grid(row=0, column=1)
         self.product_name_entry.insert(0, self.item[0])
         self.product_name_entry.configure(state=DISABLED)
@@ -1418,7 +1418,7 @@ class UpdateLocationWindow(Window):
         self.product_type_label.grid(row=0, column=0)
 
         # product type entry
-        self.product_type_entry = Entry(self.product_type_frame, width=26)
+        self.product_type_entry = Entry(self.product_type_frame, width=27)
         self.product_type_entry.grid(row=0, column=1)
         self.product_type_entry.insert(0, self.item[1])
         self.product_type_entry.configure(state=DISABLED)
@@ -1434,7 +1434,7 @@ class UpdateLocationWindow(Window):
         self.price_label.grid(row=0, column=0)
 
         # price entry
-        self.price_entry = Entry(self.price_frame, width=32)
+        self.price_entry = Entry(self.price_frame, width=33)
         self.price_entry.grid(row=0, column=1)
         self.price_entry.insert(0, self.item[2])
         self.price_entry.configure(state=DISABLED)
@@ -1467,7 +1467,7 @@ class UpdateLocationWindow(Window):
         self.unit_number.configure(state=DISABLED)
 
         # unit entry
-        self.unit_entry = Entry(self.currency_unit_frame, width=11)
+        self.unit_entry = Entry(self.currency_unit_frame, width=12)
         self.unit_entry.grid(row=0, column=4)
         self.unit_entry.insert(0, self.item[4])
         self.unit_entry.configure(state=DISABLED)
@@ -1502,7 +1502,7 @@ class UpdateLocationWindow(Window):
 
         # general location entry
         self.general_location_entry = Entry(
-            self.general_location_frame, width=23)
+            self.general_location_frame, width=24)
         self.general_location_entry.grid(row=0, column=3)
         self.general_location_entry.insert(0, self.item[6])
 
@@ -1544,7 +1544,7 @@ class UpdateLocationWindow(Window):
         self.city_label.grid(row=0, column=4)
 
         # city entry
-        self.city_entry = Entry(self.city_frame, width=33)
+        self.city_entry = Entry(self.city_frame, width=34)
         self.city_entry.grid(row=0, column=5)
         self.city_entry.insert(0, self.item[8])
 
@@ -1619,3 +1619,8 @@ if __name__ == '__main__':
 # # # MOBILE REFERENCES # # #
 # Canvas(width=1000, height=1800)
 # separator: 70*'-'
+# initialdir='/storage/emulated/0/DCIM/Camera'
+# DetailWindow edit_button padx=86
+# currency_entry width=7
+# unit_number width=7
+# unit_entry width=12
