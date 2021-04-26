@@ -4,7 +4,7 @@ import sqlite3
 
 # getting db location
 directory = os.path.dirname(os.path.realpath(__file__))
-db = os.path.join(directory, 'db', 'price_app.sqlite3')
+db = os.path.join(directory, 'db', 'test.sqlite3')
 
 
 def create_in_db(**kwargs):
@@ -19,6 +19,7 @@ def create_in_db(**kwargs):
     city = kwargs.get('city')
     general_location = kwargs.get('general_location')
     price = kwargs.get('price')
+    price_per_unit = kwargs.get('price_per_unit')
     currency = kwargs.get('currency')
     unit = kwargs.get('unit')
     date = kwargs.get('date')
@@ -146,6 +147,7 @@ def create_in_db(**kwargs):
             :product_id,
             :location_id,
             :price,
+            :price_per_unit,
             :currency,
             :unit,
             :date
@@ -155,6 +157,7 @@ def create_in_db(**kwargs):
             'product_id': product_id,
             'location_id': location_id,
             'price': price,
+            'price_per_unit': price_per_unit,
             'currency': currency,
             'unit': unit,
             'date': date
@@ -170,13 +173,23 @@ def search_db(search_phrase):
     conn = sqlite3.connect(db)
     cur = conn.cursor()
 
+    # creating search phrase
+    def create_search_phrase(phrase):
+        phrase_list = phrase.split()
+        result = ''
+        for word in phrase_list:
+            result += word + '%'
+        return result
+
+    advanced_search_phrase = create_search_phrase(search_phrase)
+
     # searching for entries in db
     cur.execute(
         """
-        SELECT products.product_name, products.product_type,
-            prices.price, prices.currency, prices.unit, locations.location_name,
+        SELECT products.product_name, products.product_type, prices.price,
+            prices.currency, prices.unit, locations.location_name,
             locations.general_location, prices.price_date, locations.city,  
-            prices.product_id, prices.location_id, products.picture
+            prices.product_id, prices.location_id, products.picture, prices.price_per_unit
         FROM locations
         JOIN prices
         ON locations.location_id = prices.location_id
@@ -192,20 +205,20 @@ def search_db(search_phrase):
 	        )
         )
         AND products.product_type LIKE :product_type
-        ORDER BY prices.price DESC;
+        ORDER BY prices.price_per_unit DESC;
         """,
         {
-            'product_type': '%' + search_phrase + '%'
+            'product_type': '%' + advanced_search_phrase
         }
     )
     query = cur.fetchall()
     if query == []:
         cur.execute(
             """
-        SELECT products.product_name, products.product_type,
-            prices.price, prices.currency, prices.unit, locations.location_name,
+        SELECT products.product_name, products.product_type, prices.price,
+            prices.currency, prices.unit, locations.location_name,
             locations.general_location, prices.price_date, locations.city,  
-            prices.product_id, prices.location_id, products.picture
+            prices.product_id, prices.location_id, products.picture, prices.price_per_unit
         FROM locations
         JOIN prices
         ON locations.location_id = prices.location_id
@@ -221,10 +234,10 @@ def search_db(search_phrase):
 	        )
         )
         AND products.product_name LIKE :product_name
-        ORDER BY prices.price DESC;
+        ORDER BY prices.price_per_unit DESC;
             """,
             {
-                'product_name': '%' + search_phrase + '%'
+                'product_name': '%' + advanced_search_phrase
             }
         )
         query = cur.fetchall()
@@ -241,6 +254,7 @@ def update_price_db(**kwargs):
 
     # assigning values to variables
     price = kwargs.get('price')
+    price_per_unit = kwargs.get('price_per_unit')
     currency = kwargs.get('currency')
     unit = kwargs.get('unit')
     price_date = kwargs.get('price_date')
@@ -253,6 +267,7 @@ def update_price_db(**kwargs):
         UPDATE prices
         SET
             price = :price,
+            price_per_unit = :price_per_unit,
             currency = :currency,
             unit = :unit,
             price_date = :price_date
@@ -260,6 +275,7 @@ def update_price_db(**kwargs):
         """,
         {
             'price': price,
+            'price_per_unit': price_per_unit,
             'currency': currency,
             'unit': unit,
             'price_date': price_date,

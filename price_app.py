@@ -144,7 +144,7 @@ class CreateNewWindow(Window):
         self.currency_label.grid(row=0, column=0)
 
         # currency entry
-        self.currency_entry = Entry(self.currency_unit_frame, width=9)
+        self.currency_entry = Entry(self.currency_unit_frame, width=6)
         self.currency_entry.grid(row=0, column=1)
         self.currency_entry.insert(0, 'RSD')
 
@@ -152,9 +152,14 @@ class CreateNewWindow(Window):
         self.unit_label = Label(self.currency_unit_frame, text='Unit:')
         self.unit_label.grid(row=0, column=2)
 
+        # unit number
+        self.unit_number = Entry(self.currency_unit_frame, width=6)
+        self.unit_number.grid(row=0, column=3)
+        self.unit_number.insert(0, '1')
+
         # unit entry
-        self.unit_entry = Entry(self.currency_unit_frame, width=15)
-        self.unit_entry.grid(row=0, column=3)
+        self.unit_entry = Entry(self.currency_unit_frame, width=11)
+        self.unit_entry.grid(row=0, column=4)
 
         # LOCATION
         # location frame
@@ -257,6 +262,11 @@ class CreateNewWindow(Window):
             self.product_name_entry.configure(state=DISABLED)
             self.product_type_entry.insert(0, self.product[1])
             self.product_type_entry.configure(state=DISABLED)
+            self.currency_entry.delete(0, END)
+            self.currency_entry.insert(0, self.product[2])
+            self.unit_number.delete(0, END)
+            self.unit_number.insert(0, self.product[3])
+            self.unit_entry.insert(0, self.product[4])
             self.upload_button.configure(state=DISABLED)
 
         # KEEPING LOCATION DATA
@@ -329,6 +339,10 @@ class CreateNewWindow(Window):
             submit_date = self.year_entry.get() + '-' + self.month_entry.get() + \
                 '-' + self.day_entry.get()
 
+            # creating price_per_unit
+            price_per_unit = float(self.price_entry.get()) * \
+                1 / float(self.unit_number.get())
+
             # inserting to db with no picture
             if len(self.picture.getvalue()) == 0:
                 create_in_db(
@@ -338,6 +352,7 @@ class CreateNewWindow(Window):
                     city=self.city_entry.get(),
                     general_location=self.general_location_entry.get(),
                     price=self.price_entry.get(),
+                    price_per_unit=str(price_per_unit),
                     currency=self.currency_entry.get(),
                     unit=self.unit_entry.get(),
                     date=submit_date
@@ -351,6 +366,7 @@ class CreateNewWindow(Window):
                     city=self.city_entry.get(),
                     general_location=self.general_location_entry.get(),
                     price=self.price_entry.get(),
+                    price_per_unit=str(price_per_unit),
                     currency=self.currency_entry.get(),
                     unit=self.unit_entry.get(),
                     date=submit_date,
@@ -381,6 +397,8 @@ class CreateNewWindow(Window):
             return self.warning()
         elif len(self.currency_entry.get()) == 0:
             return self.warning()
+        elif len(self.unit_number.get()) == 0:
+            return self.warning()
         elif len(self.unit_entry.get()) == 0:
             return self.warning()
         elif len(self.location_name_entry.get()) == 0:
@@ -399,6 +417,7 @@ class CreateNewWindow(Window):
         # validating numbers
         try:
             float(self.price_entry.get())
+            float(self.unit_number.get())
             if int(self.day_entry.get()) > 31 or int(self.day_entry.get()) < 1 or int(self.month_entry.get()) > 12 or int(self.month_entry.get()) < 1:
                 return self.warning()
         except ValueError:
@@ -502,7 +521,7 @@ class SearchWindow(Window):
                 row=row_count, column=0, rowspan=3)
             Label(self.canvas_frame, text=item[0]).grid(
                 row=row_count, column=1, pady=5)
-            Label(self.canvas_frame, text=f'{item[2]:.2f} {item[3]}/{item[4]}').grid(
+            Label(self.canvas_frame, text=f'{item[12]:.2f} {item[3]}/{item[4]}').grid(
                 row=row_count, column=2, pady=5)
             row_count += 1
 
@@ -594,9 +613,25 @@ class DetailWindow(Window):
 
         # price item label
         self.price_item_label = Label(
-            self.price_frame, text=f'{self.item[2]} {self.item[3]}/{self.item[4]}',
-            width=22, anchor=CENTER)
+            self.price_frame, text=f'{self.item[2]:.2f} {self.item[3]}', width=22, anchor=CENTER)
         self.price_item_label.grid(row=0, column=1)
+
+        # PRICE PER UNIT
+        # price per unit frame
+        self.price_per_unit_frame = LabelFrame(self.window)
+        self.price_per_unit_frame.grid(
+            row=self.main_row, column=0, columnspan=3)
+
+        # price per unit label
+        self.price_per_unit_label = Label(
+            self.price_per_unit_frame, text='Price per unit:', width=15, anchor=W)
+        self.price_per_unit_label.grid(row=0, column=0)
+
+        # price per unit item label
+        self.price_per_unit_item_label = Label(
+            self.price_per_unit_frame, text=f'{self.item[12]:.2f} {self.item[3]}/{self.item[4]}',
+            width=22, anchor=CENTER)
+        self.price_per_unit_item_label.grid(row=0, column=1)
 
         # LOCATION NAME
         # location name frame
@@ -754,7 +789,9 @@ class DetailWindow(Window):
             return self.previous_window(self.window, MainWindow, query, self.search_phrase)
 
     def add_price(self):
-        product = (self.item[0], self.item[1])
+        unit_number = float(self.item[2]) / float(self.item[12])
+        product = (self.item[0], self.item[1],
+                   self.item[3], unit_number, self.item[4])
         return CreateNewWindow(self.window, MainWindow, product=product)
 
 # # # UPDATE PRICE # # #
@@ -829,7 +866,7 @@ class UpdatePriceWindow(Window):
         self.currency_label.grid(row=0, column=0)
 
         # currency entry
-        self.currency_entry = Entry(self.currency_unit_frame, width=9)
+        self.currency_entry = Entry(self.currency_unit_frame, width=6)
         self.currency_entry.grid(row=0, column=1)
         self.currency_entry.insert(0, self.item[3])
 
@@ -837,9 +874,15 @@ class UpdatePriceWindow(Window):
         self.unit_label = Label(self.currency_unit_frame, text='Unit:')
         self.unit_label.grid(row=0, column=2)
 
+        # unit number
+        self.unit_number = Entry(self.currency_unit_frame, width=6)
+        self.unit_number.grid(row=0, column=3)
+        self.get_unit_number = float(self.item[2]) / float(self.item[12])
+        self.unit_number.insert(0, str(self.get_unit_number))
+
         # unit entry
-        self.unit_entry = Entry(self.currency_unit_frame, width=15)
-        self.unit_entry.grid(row=0, column=3)
+        self.unit_entry = Entry(self.currency_unit_frame, width=11)
+        self.unit_entry.grid(row=0, column=4)
         self.unit_entry.insert(0, self.item[4])
 
         # LOCATION
@@ -959,9 +1002,14 @@ class UpdatePriceWindow(Window):
             submit_date = self.year_entry.get() + '-' + self.month_entry.get() + \
                 '-' + self.day_entry.get()
 
+            # creating price_per_unit
+            price_per_unit = float(self.price_entry.get()) * \
+                1 / float(self.unit_number.get())
+
             # submitting to database
             update_price_db(
                 price=self.price_entry.get(),
+                price_per_unit=str(price_per_unit),
                 currency=self.currency_entry.get(),
                 unit=self.unit_entry.get(),
                 price_date=submit_date,
@@ -990,6 +1038,8 @@ class UpdatePriceWindow(Window):
             return self.warning()
         elif len(self.currency_entry.get()) == 0:
             return self.warning()
+        elif len(self.unit_number.get()) == 0:
+            return self.warning()
         elif len(self.unit_entry.get()) == 0:
             return self.warning()
         elif len(self.day_entry.get()) == 0 or len(self.day_entry.get()) > 2:
@@ -1002,6 +1052,7 @@ class UpdatePriceWindow(Window):
         # validating numbers
         try:
             float(self.price_entry.get())
+            float(self.unit_number.get())
             if int(self.day_entry.get()) > 31 or int(self.day_entry.get()) < 1 or int(self.month_entry.get()) > 12 or int(self.month_entry.get()) < 1:
                 return self.warning()
         except ValueError:
@@ -1084,7 +1135,7 @@ class UpdateProductWindow(Window):
         self.currency_label.grid(row=0, column=0)
 
         # currency entry
-        self.currency_entry = Entry(self.currency_unit_frame, width=9)
+        self.currency_entry = Entry(self.currency_unit_frame, width=6)
         self.currency_entry.grid(row=0, column=1)
         self.currency_entry.insert(0, self.item[3])
         self.currency_entry.configure(state=DISABLED)
@@ -1093,9 +1144,16 @@ class UpdateProductWindow(Window):
         self.unit_label = Label(self.currency_unit_frame, text='Unit:')
         self.unit_label.grid(row=0, column=2)
 
+        # unit number
+        self.unit_number = Entry(self.currency_unit_frame, width=6)
+        self.unit_number.grid(row=0, column=3)
+        self.get_unit_number = float(self.item[2]) / float(self.item[12])
+        self.unit_number.insert(0, str(self.get_unit_number))
+        self.unit_number.configure(state=DISABLED)
+
         # unit entry
-        self.unit_entry = Entry(self.currency_unit_frame, width=15)
-        self.unit_entry.grid(row=0, column=3)
+        self.unit_entry = Entry(self.currency_unit_frame, width=11)
+        self.unit_entry.grid(row=0, column=4)
         self.unit_entry.insert(0, self.item[4])
         self.unit_entry.configure(state=DISABLED)
 
@@ -1392,7 +1450,7 @@ class UpdateLocationWindow(Window):
         self.currency_label.grid(row=0, column=0)
 
         # currency entry
-        self.currency_entry = Entry(self.currency_unit_frame, width=9)
+        self.currency_entry = Entry(self.currency_unit_frame, width=6)
         self.currency_entry.grid(row=0, column=1)
         self.currency_entry.insert(0, self.item[3])
         self.currency_entry.configure(state=DISABLED)
@@ -1401,9 +1459,16 @@ class UpdateLocationWindow(Window):
         self.unit_label = Label(self.currency_unit_frame, text='Unit:')
         self.unit_label.grid(row=0, column=2)
 
+        # unit number
+        self.unit_number = Entry(self.currency_unit_frame, width=6)
+        self.unit_number.grid(row=0, column=3)
+        self.get_unit_number = float(self.item[2]) / float(self.item[12])
+        self.unit_number.insert(0, str(self.get_unit_number))
+        self.unit_number.configure(state=DISABLED)
+
         # unit entry
-        self.unit_entry = Entry(self.currency_unit_frame, width=15)
-        self.unit_entry.grid(row=0, column=3)
+        self.unit_entry = Entry(self.currency_unit_frame, width=11)
+        self.unit_entry.grid(row=0, column=4)
         self.unit_entry.insert(0, self.item[4])
         self.unit_entry.configure(state=DISABLED)
 

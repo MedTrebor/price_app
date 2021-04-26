@@ -35,6 +35,7 @@ cur.execute(
 	product_id INTEGER,
 	location_id INTEGER,
 	price REAL(9,2),
+	price_per_unit REAL(9,2),
 	currency TEXT,
 	unit TEXT,
 	price_date TEXT,
