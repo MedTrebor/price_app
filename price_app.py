@@ -84,6 +84,8 @@ class CreateNewWindow(Window):
         super().__init__(window, previous_window)
         self.query = kwargs.get('query')
         self.search_phrase = kwargs.get('search_phrase', 'qwerty')
+        self.product = kwargs.get('product', None)
+        self.keep_location = kwargs.get('keep_location', None)
         self.picture = io.BytesIO()
 
         # PRODUCT NAME
@@ -221,6 +223,14 @@ class CreateNewWindow(Window):
         self.city_entry.grid(row=0, column=5)
         self.city_entry.insert(0, 'Novi Sad')
 
+        # KEEP LOCATION CHECKBOX
+        self.keep_location_var = IntVar()
+        self.keep_location_var.set(0)
+        self.keep_location_check = Checkbutton(
+            self.window, text='KEEP LOCATION', variable=self.keep_location_var)
+        self.keep_location_check.grid(
+            row=self.main_row, column=0, columnspan=2, sticky=W)
+
         # UPLOAD BUTTON
         self.upload_button = Button(
             self.window, text='UPLOAD PICTURE', command=self.upload)
@@ -240,6 +250,30 @@ class CreateNewWindow(Window):
         # bind <Return> and <Escape>
         self.window.bind('<Return>', self.create_execute)
         self.window.bind('<Escape>', self.cancel)
+
+        # ADDING MORE PRICES FOR SAME PRODUCT
+        if self.product is not None:
+            self.product_name_entry.insert(0, self.product[0])
+            self.product_name_entry.configure(state=DISABLED)
+            self.product_type_entry.insert(0, self.product[1])
+            self.product_type_entry.configure(state=DISABLED)
+            self.upload_button.configure(state=DISABLED)
+
+        # KEEPING LOCATION DATA
+        if self.keep_location is not None:
+            self.location_name_entry.insert(0, self.keep_location[0])
+            self.general_location_entry.insert(0, self.keep_location[1])
+
+            self.day_entry.delete(0, END)
+            self.month_entry.delete(0, END)
+            self.year_entry.delete(0, END)
+            self.city_entry.delete(0, END)
+
+            self.day_entry.insert(0, self.keep_location[2])
+            self.month_entry.insert(0, self.keep_location[3])
+            self.year_entry.insert(0, self.keep_location[4])
+            self.city_entry.insert(0, self.keep_location[5])
+            self.keep_location_check.select()
 
     # UPLOAD PICTURE
     def upload(self):
@@ -323,7 +357,19 @@ class CreateNewWindow(Window):
                     picture=self.picture.getvalue()
                 )
             query = search_db(self.search_phrase)
-            CreateNewWindow(self.window, self.previous_window, query=query)
+            if self.keep_location_var.get() == 0:
+                CreateNewWindow(self.window, self.previous_window, query=query)
+            else:
+                keep_location = (
+                    self.location_name_entry.get(),
+                    self.general_location_entry.get(),
+                    self.day_entry.get(),
+                    self.month_entry.get(),
+                    self.year_entry.get(),
+                    self.city_entry.get()
+                )
+                CreateNewWindow(self.window, self.previous_window,
+                                query=query, keep_location=keep_location)
 
     def validate(self):
         # validating field length
@@ -639,15 +685,20 @@ class DetailWindow(Window):
         # NEXT BUTTON
         self.set_next_button()
 
-        # BACK BUTTON
-        self.back_button = Button(window, text='BACK', command=self.back)
-        self.back_button.grid(row=self.main_row_same, column=1,
-                              pady=5)
+        # ADD PRICE BUTTON
+        self.add_price_button = Button(
+            self.window, text='ADD PRICE', command=self.add_price)
+        self.add_price_button.grid(row=self.main_row_same, column=1)
 
         # EDIT BUTTON
         self.edit_button = Button(
             self.window, text='EDIT', padx=21, command=self.edit)
         self.edit_button.grid(row=self.main_row, column=0, pady=5)
+
+        # BACK BUTTON
+        self.back_button = Button(window, text='BACK', command=self.back)
+        self.back_button.grid(row=self.main_row_same, column=1,
+                              pady=5)
 
         # DELETE BUTTON
         self.delete_button = Button(
@@ -702,8 +753,13 @@ class DetailWindow(Window):
             query = search_db(self.search_phrase)
             return self.previous_window(self.window, MainWindow, query, self.search_phrase)
 
+    def add_price(self):
+        product = (self.item[0], self.item[1])
+        return CreateNewWindow(self.window, MainWindow, product=product)
 
 # # # UPDATE PRICE # # #
+
+
 class UpdatePriceWindow(Window):
     def __init__(self, window, previous_window, item_no, query, search_phrase):
         super().__init__(window, previous_window)
