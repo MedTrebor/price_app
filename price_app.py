@@ -1627,3 +1627,5 @@ if __name__ == '__main__':
 # currency_entry width=7
 # unit_number width=7
 # unit_entry width=12
+# SearchWindow wraplength=450
+# DetailWindow wraplength=700
