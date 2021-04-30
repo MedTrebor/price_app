@@ -289,7 +289,8 @@ class CreateNewWindow(Window):
     def upload(self):
         # opening file browser
         filename = filedialog.askopenfilename(
-            initialdir=os.getcwd(),
+            # initialdir=os.getcwd(),
+            initialdir='/home/medtrebor/Desktop/temp',
             title='Select picture',
             filetypes=(('all files', '*.*'),)
         )
@@ -519,7 +520,7 @@ class SearchWindow(Window):
         for item in self.query:
             Label(self.canvas_frame, text=f'{count}.').grid(
                 row=row_count, column=0, rowspan=3)
-            Label(self.canvas_frame, text=item[0]).grid(
+            Label(self.canvas_frame, text=item[0], wraplength=160, justify="center").grid(
                 row=row_count, column=1, pady=5)
             Label(self.canvas_frame, text=f'{item[12]:.2f} {item[3]}/{item[4]}').grid(
                 row=row_count, column=2, pady=5)
@@ -583,7 +584,7 @@ class DetailWindow(Window):
 
         # product name item label
         self.product_name_item_label = Label(
-            self.product_name_frame, text=self.item[0], width=23, anchor=CENTER)
+            self.product_name_frame, text=self.item[0], width=23, anchor=CENTER, wraplength=182, justify="center")
         self.product_name_item_label.grid(row=0, column=1)
 
         # PRODUCT TYPE
@@ -1236,9 +1237,11 @@ class UpdateProductWindow(Window):
         self.city_entry.configure(state=DISABLED)
 
         # ROTATE LEFT BUTTON
+        self.directory = os.path.dirname(os.path.realpath(__file__))
+        self.icon_directory = os.path.join(self.directory, 'icons')
         self.rotate_left_button = Button(self.window, command=self.rotate_left)
         self.rotate_left_button.img = ImageTk.PhotoImage(
-            file='./icons/rotate-left.png')
+            file=os.path.join(self.icon_directory, 'rotate-left.png'))
         self.rotate_left_button.configure(image=self.rotate_left_button.img)
         self.rotate_left_button.grid(row=self.main_row, column=0, pady=5)
 
@@ -1251,7 +1254,7 @@ class UpdateProductWindow(Window):
         self.rotate_right_button = Button(
             self.window, command=self.rotate_right)
         self.rotate_right_button.img = ImageTk.PhotoImage(
-            file='./icons/rotate-right.png')
+            file=os.path.join(self.icon_directory, 'rotate-right.png'))
         self.rotate_right_button.configure(image=self.rotate_right_button.img)
         self.rotate_right_button.grid(row=self.main_row_same, column=2, pady=5)
 
